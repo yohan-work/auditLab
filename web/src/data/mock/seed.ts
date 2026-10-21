@@ -29,16 +29,26 @@ function rand() {
 }
 const pick = <T,>(arr: T[]) => arr[Math.floor(rand() * arr.length)]
 
-export const firm: Firm = { id: 'f-1', name: '가온 감사반', kind: 'audit_team' }
+export const firm: Firm = {
+  id: 'f-1',
+  name: '가온 감사반',
+  kind: 'audit_team',
+  regNo: '감사반 제2019-0XX호 (가상)',
+  representative: '김지현',
+  address: '서울특별시 영등포구 국제금융로 (가상 주소)',
+  phone: '02-000-0000',
+  fiscalYearStart: '01-01',
+  plan: { name: '감사반 스탠다드 (시연)', seats: 6, usedSeats: 5, renewsAt: '2027-01-31', billing: '연간' },
+}
 
 export const users: User[] = [
-  { id: 'u-kim', name: '김지현', initials: '김지', role: 'partner', title: '대표 회계사', color: '#dbeafe' },
-  { id: 'u-park', name: '박서준', initials: '박서', role: 'manager', title: '책임 회계사', color: '#dcfce7' },
-  { id: 'u-lee', name: '이하은', initials: '이하', role: 'senior', title: '회계사', color: '#fef3c7' },
-  { id: 'u-choi', name: '최도윤', initials: '최도', role: 'staff', title: '수습 회계사', color: '#fce7f3' },
-  { id: 'u-jung', name: '정민서', initials: '정민', role: 'eqr', title: '심리 회계사', color: '#ede9fe' },
-  { id: 'c-oh', name: '오세영', initials: '오세', role: 'client', title: '샘플제조 재무팀장', color: '#e0f2fe', clientId: 'cl-sample' },
-  { id: 'c-han', name: '한유진', initials: '한유', role: 'client', title: '샘플제조 회계담당', color: '#e0f2fe', clientId: 'cl-sample' },
+  { id: 'u-kim', name: '김지현', initials: '김지', role: 'partner', title: '대표 회계사', color: '#dbeafe' , email: 'jihyun.kim@gaon-audit.example', phone: '010-0000-0001', cpaNo: 'CPA-0000-1001' },
+  { id: 'u-park', name: '박서준', initials: '박서', role: 'manager', title: '책임 회계사', color: '#dcfce7' , email: 'seojun.park@gaon-audit.example', phone: '010-0000-0002', cpaNo: 'CPA-0000-1002' },
+  { id: 'u-lee', name: '이하은', initials: '이하', role: 'senior', title: '회계사', color: '#fef3c7' , email: 'haeun.lee@gaon-audit.example', phone: '010-0000-0003', cpaNo: 'CPA-0000-1003' },
+  { id: 'u-choi', name: '최도윤', initials: '최도', role: 'staff', title: '수습 회계사', color: '#fce7f3' , email: 'doyun.choi@gaon-audit.example', phone: '010-0000-0004', cpaNo: 'CPA-0000-1004' },
+  { id: 'u-jung', name: '정민서', initials: '정민', role: 'eqr', title: '심리 회계사', color: '#ede9fe' , email: 'minseo.jung@gaon-audit.example', phone: '010-0000-0005', cpaNo: 'CPA-0000-1005' },
+  { id: 'c-oh', name: '오세영', initials: '오세', role: 'client', title: '샘플제조 재무팀장', color: '#e0f2fe', clientId: 'cl-sample' , email: 'seyoung.oh@sample-mfg.example', phone: '010-0000-0101' },
+  { id: 'c-han', name: '한유진', initials: '한유', role: 'client', title: '샘플제조 회계담당', color: '#e0f2fe', clientId: 'cl-sample' , email: 'yujin.han@sample-mfg.example', phone: '010-0000-0102' },
 ]
 
 const clientNames: [string, string][] = [

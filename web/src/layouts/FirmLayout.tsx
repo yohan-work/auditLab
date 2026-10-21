@@ -1,7 +1,8 @@
 import { NavLink, Outlet, Link } from 'react-router-dom'
-import { CalendarDays, Settings, HelpCircle, UserRound, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { KrTag } from '@/components/ui'
+import { CalendarMenu, HelpMenu, SettingsMenu, UserMenu } from '@/components/HeaderMenus'
 import { useInbox, useFirm } from '@/data/hooks'
 import { PRIMARY_ENGAGEMENT_ID } from '@/data/mock/seed'
 import { cx } from '@/lib/format'
@@ -39,20 +40,18 @@ export function FirmLayout() {
             {l.kr && <KrTag className="bg-white/15 text-[#86efac]" />}
           </NavLink>
         ))}
-        <div className="ml-auto flex items-center gap-4 text-white/85">
-          <span className="text-xs text-white/60">{firm.name}</span>
+        <div className="ml-auto flex items-center gap-1.5 text-white/85">
+          <span className="mr-2 text-xs text-white/60">{firm.name}</span>
           <Link
             to={`/portal/${PRIMARY_ENGAGEMENT_ID}`}
-            className="flex items-center gap-1 rounded-md border border-white/20 px-2.5 py-1 text-xs hover:bg-white/10"
+            className="mr-2 flex items-center gap-1 rounded-md border border-white/20 px-2.5 py-1 text-xs hover:bg-white/10"
           >
             고객 포털 보기 <ExternalLink size={12} />
           </Link>
-          <CalendarDays size={18} />
-          <Link to="/settings" aria-label="설정">
-            <Settings size={18} />
-          </Link>
-          <HelpCircle size={18} />
-          <UserRound size={18} />
+          <CalendarMenu dark />
+          <SettingsMenu dark />
+          <HelpMenu dark />
+          <UserMenu dark />
         </div>
       </nav>
       <main className="flex min-h-0 flex-1 flex-col">

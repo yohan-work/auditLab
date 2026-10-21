@@ -12,6 +12,9 @@ export const useClients = () => useDb((s) => s.clients)
 export const useEngagements = () => useDb((s) => s.engagements)
 export const useControls = () => useDb((s) => s.controls)
 export const useIndependence = () => useDb((s) => s.independence)
+export const useIntegrations = () => useDb((s) => s.integrations)
+export const useNotificationPrefs = () => useDb((s) => s.notificationPrefs)
+export const useAccessLog = () => useDb((s) => s.accessLog)
 
 export function useCurrentUser() {
   return useDb(useShallow((s) => s.users.find((u) => u.id === s.currentUserId)!))
@@ -93,7 +96,9 @@ export function useFirmInspection(): InspectionFinding[] {
             confirmations: s.confirmations.filter((c) => c.engagementId === e.id),
             independence: s.independence,
           }),
-        ),
+        )
+        .filter((f, i, all) => f.ruleId !== 'independence' || all.findIndex((x) => x.ruleId === 'independence' && x.detail === f.detail) === i)
+        .map((f) => (f.ruleId === 'independence' ? { ...f, engagementId: undefined } : f)),
     [s],
   )
 }

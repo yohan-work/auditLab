@@ -4,6 +4,8 @@ import { useDb, newId, nowIso } from './store'
 import type {
   AuditRequest,
   ConfirmationChannel,
+  Firm,
+  Integration,
   DocumentSource,
   Engagement,
   RequestStatus,
@@ -12,6 +14,11 @@ import type {
 
 export interface AuditApi {
   setFirmKind(kind: 'firm' | 'audit_team'): Promise<void>
+  updateFirm(patch: Partial<Firm>): Promise<void>
+  /** 시연용 사용자 전환. 실제 서비스에서는 로그인 세션이 대신한다. */
+  switchUser(userId: string): Promise<void>
+  setIntegrationStatus(id: string, status: Integration['status']): Promise<void>
+  setNotificationPref(id: string, channel: 'inApp' | 'email', value: boolean): Promise<void>
   createEngagement(input: Pick<Engagement, 'clientId' | 'name' | 'type' | 'fiscalYear' | 'leadId' | 'teamIds' | 'agmDate'>): Promise<string>
   updateEngagement(id: string, patch: Partial<Engagement>): Promise<void>
 
@@ -63,6 +70,30 @@ function patchNode(nodeId: string, fn: (n: ReturnType<typeof get>['workflow'][nu
 export const mockApi: AuditApi = {
   setFirmKind(kind) {
     set((s) => ({ firm: { ...s.firm, kind } }))
+    return ok()
+  },
+
+  updateFirm(patch) {
+    set((s) => ({ firm: { ...s.firm, ...patch } }))
+    return ok()
+  },
+
+  switchUser(userId) {
+    set({ currentUserId: userId })
+    return ok()
+  },
+
+  setIntegrationStatus(id, status) {
+    set((s) => ({
+      integrations: s.integrations.map((i) =>
+        i.id === id ? { ...i, status, lastSync: status === 'connected' ? `${s.today} 09:00` : i.lastSync } : i,
+      ),
+    }))
+    return ok()
+  },
+
+  setNotificationPref(id, channel, value) {
+    set((s) => ({ notificationPrefs: s.notificationPrefs.map((n) => (n.id === id ? { ...n, [channel]: value } : n)) }))
     return ok()
   },
 

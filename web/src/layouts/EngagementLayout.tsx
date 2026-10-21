@@ -1,5 +1,8 @@
 import { NavLink, Outlet, Link, useParams, useNavigate } from 'react-router-dom'
-import { Inbox, LayoutGrid, Building2, ShieldCheck, BookOpen, CalendarDays, Settings, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
+import { Inbox, LayoutGrid, Building2, ShieldCheck, BookOpen, Settings, ChevronDown } from 'lucide-react'
+import { CalendarMenu, HelpMenu, UserMenu } from '@/components/HeaderMenus'
+import { EngagementSettingsModal } from '@/components/EngagementSettings'
 import { Logo } from '@/components/Logo'
 import { KrTag, StatusPill } from '@/components/ui'
 import { useClient, useEngagement, useEngagements, useClients } from '@/data/hooks'
@@ -11,7 +14,6 @@ const rail = [
   { to: '/clients', icon: Building2, label: '고객사' },
   { to: '/quality', icon: ShieldCheck, label: '품질관리' },
   { to: '/controls', icon: BookOpen, label: '절차 라이브러리' },
-  { to: '/settings', icon: CalendarDays, label: '일정' },
 ]
 
 export const engagementTabs = [
@@ -35,6 +37,7 @@ export function EngagementLayout() {
   const client = useClient(e?.clientId)
   const all = useEngagements()
   const clients = useClients()
+  const [settingsOpen, setSettingsOpen] = useState(false)
   if (!e) return <div className="p-10 text-muted">감사 업무를 찾을 수 없습니다.</div>
 
   return (
@@ -48,6 +51,11 @@ export function EngagementLayout() {
             <Icon size={19} strokeWidth={1.7} />
           </Link>
         ))}
+        <CalendarMenu placement="right" />
+        <div className="mt-auto flex flex-col items-center gap-1">
+          <HelpMenu placement="top-right" />
+          <UserMenu placement="top-right" />
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -71,7 +79,14 @@ export function EngagementLayout() {
             ))}
           </nav>
           <div className="flex shrink-0 items-center gap-3 pl-3">
-            <Settings size={18} className="text-muted" />
+            <button
+              onClick={() => setSettingsOpen(true)}
+              title="감사 업무 설정"
+              aria-label="감사 업무 설정"
+              className="rounded-md p-1.5 text-muted hover:bg-canvas hover:text-ink-2"
+            >
+              <Settings size={18} />
+            </button>
             <StatusPill status={e.status} />
             <span className="text-[15px] font-semibold text-ink">{e.name}</span>
             <label className="relative flex cursor-pointer items-center gap-1 text-[15px] text-muted">
@@ -95,6 +110,7 @@ export function EngagementLayout() {
         <main className="min-h-0 flex-1 overflow-auto bg-white">
           <Outlet />
         </main>
+        {settingsOpen && <EngagementSettingsModal engagement={e} open onClose={() => setSettingsOpen(false)} />}
       </div>
     </div>
   )

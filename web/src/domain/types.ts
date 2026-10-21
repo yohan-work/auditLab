@@ -13,6 +13,9 @@ export interface User {
   title: string
   color: string // 아바타 배경
   clientId?: ID // 고객사 담당자일 때
+  email?: string
+  phone?: string
+  cpaNo?: string // 공인회계사 등록번호(시연용 가상 번호)
 }
 
 export type FirmKind = 'firm' | 'audit_team' // 회계법인 / 감사반
@@ -21,6 +24,39 @@ export interface Firm {
   id: ID
   name: string
   kind: FirmKind
+  regNo?: string // 한공회 감사반 등록번호 / 법인 등록번호(가상)
+  representative?: string
+  address?: string
+  phone?: string
+  fiscalYearStart?: string
+  plan?: { name: string; seats: number; usedSeats: number; renewsAt: string; billing: '연간' | '월간' }
+}
+
+export interface Integration {
+  id: ID
+  name: string
+  category: '외부조회' | '공시·데이터' | '분석' | '회계 시스템' | '협업' | '저장소'
+  description: string
+  status: 'connected' | 'available' | 'planned'
+  kr: boolean
+  lastSync?: string
+}
+
+export interface NotificationPref {
+  id: ID
+  label: string
+  description: string
+  inApp: boolean
+  email: boolean
+}
+
+export interface AccessLogEntry {
+  id: ID
+  at: string
+  userId: ID
+  action: string
+  target: string
+  ip: string
 }
 
 export interface Client {

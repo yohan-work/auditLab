@@ -2,7 +2,9 @@
 // 실제 백엔드로 바꿀 때는 api.ts의 구현만 HTTP 호출로 교체하면 된다.
 import { create } from 'zustand'
 import * as seed from './mock/seed'
+import * as settingsSeed from './mock/settings'
 import type {
+  AccessLogEntry,
   AuditDocument,
   AuditForm,
   AuditRequest,
@@ -14,6 +16,8 @@ import type {
   FSLine,
   InboxItem,
   IndependenceConfirmation,
+  Integration,
+  NotificationPref,
   Questionnaire,
   ReviewNote,
   TimeEntry,
@@ -40,6 +44,9 @@ export interface DbState {
   questionnaires: Questionnaire[]
   inbox: InboxItem[]
   controls: ControlTemplate[]
+  integrations: Integration[]
+  notificationPrefs: NotificationPref[]
+  accessLog: AccessLogEntry[]
 }
 
 function initialState(): DbState {
@@ -63,6 +70,9 @@ function initialState(): DbState {
     questionnaires: clone(seed.questionnaires),
     inbox: clone(seed.inbox),
     controls: clone(seed.controls),
+    integrations: clone(settingsSeed.integrations),
+    notificationPrefs: clone(settingsSeed.notificationPrefs),
+    accessLog: clone(settingsSeed.accessLog),
   }
 }
 
