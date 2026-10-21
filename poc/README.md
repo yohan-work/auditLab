@@ -5,9 +5,20 @@
 - **As-Is**: 표본 기반 조서 (감사마스터 조서 4000C-1·4000C-2·5050·5051·4000C-3·4000P-2·4000P-5·4000P-10)
 - **K-Tieout**: 원장 × 홈택스 매출 전자세금계산서 × 은행 입금 3방향 전수대사
 
-데모 페이지: https://claude.ai/artifact/U4T9HKp5mGfLYquLskG4z1
+앱 템플릿: `page/app_template.html` (데이터는 `build_app.py`가 끼워 넣음)
 
-## 실행
+## 앱 화면 보기 (로컬)
+
+```bash
+cd poc
+./run.sh          # 데이터 생성 → 대사 → 조서 → 앱 빌드 후 브라우저로 http://localhost:8765 열기
+./run.sh --app    # 화면(page/app_template.html)만 고쳤을 때 빠르게 다시 빌드
+```
+
+종료는 Ctrl+C. 서버 없이 `output/K-Tieout_앱.html`을 브라우저로 바로 열어도 된다.
+화면: 감사 목록 → 대시보드 → 자료 요청 → 조서(지금 방식/K-Tieout 전환) → 검토 필요 → 비교 리포트.
+
+## 단계별 실행
 
 ```bash
 cd poc
@@ -16,7 +27,7 @@ python3 -m venv .venv && .venv/bin/pip install openpyxl
 .venv/bin/python ktieout.py     # output/to-be/  (정답지를 읽지 않음)
 .venv/bin/python asis.py        # output/as-is/
 .venv/bin/python compare.py     # output/비교_As-Is_vs_K-Tieout.xlsx, output/metrics.json
-.venv/bin/python build_page.py  # output/K-Tieout_데모.html
+.venv/bin/python build_app.py   # output/K-Tieout_앱.html
 ```
 
 ## 형식 근거와 신뢰도
