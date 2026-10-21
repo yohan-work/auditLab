@@ -1,0 +1,584 @@
+<title>K-Tieout 매출채권 데모</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
+<style>
+/* Layout: 감사조서 바인더 — 왼쪽 색인(조서번호처럼), 오른쪽 본문 한 단. 빨간 펜 틱마크를 강조색으로 */
+:root{
+  --paper:#F4F7F9; --sheet:#FFFFFF; --ink:#16243A; --muted:#566679; --rule:#D3DCE4; --soft:#E9EFF4;
+  --pen:#BF3A2E; --pen-soft:#FBE9E6; --blue:#2C5AA6; --blue-soft:#E6EEFA;
+  --ok:#2E7A4D; --ok-soft:#E4F2E9; --warn:#9A6514; --warn-soft:#FBF0DA;
+  --f-display:"Noto Serif KR","Apple SD Gothic Neo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1621; --sheet:#152131; --ink:#E5EBF2; --muted:#9AA9BA; --rule:#293748; --soft:#1B2A3C;
+  --pen:#F07A6D; --pen-soft:#3A2023; --blue:#8EB1EF; --blue-soft:#1C2B45;
+  --ok:#72C79A; --ok-soft:#183126; --warn:#E6B45E; --warn-soft:#332816; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1621; --sheet:#152131; --ink:#E5EBF2; --muted:#9AA9BA; --rule:#293748; --soft:#1B2A3C;
+  --pen:#F07A6D; --pen-soft:#3A2023; --blue:#8EB1EF; --blue-soft:#1C2B45;
+  --ok:#72C79A; --ok-soft:#183126; --warn:#E6B45E; --warn-soft:#332816; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.3;margin:0}
+h1{font-size:clamp(28px,4.6vw,44px);letter-spacing:-.01em}
+h2{font-size:clamp(22px,3vw,28px)}
+h3{font-size:18px}
+p{margin:0}
+a{color:var(--blue)}
+.mono,code{font-family:var(--f-mono);font-size:.92em}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;padding-block:40px 80px}
+nav.index{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13.5px}
+nav.index ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;border-left:1px solid var(--rule)}
+nav.index a{display:grid;grid-template-columns:34px 1fr;padding:6px 10px;color:var(--muted);text-decoration:none;margin-left:-1px;border-left:2px solid transparent}
+nav.index a:hover,nav.index a:focus-visible{color:var(--ink);border-left-color:var(--pen);outline:none}
+nav.index .k{font-family:var(--f-mono);font-size:12px;color:var(--pen)}
+nav.index .lbl{font-size:11.5px;letter-spacing:.08em;color:var(--muted);margin:0 0 10px 10px;text-transform:uppercase}
+main{min-width:0;display:grid;gap:72px}
+section{display:grid;gap:20px;min-width:0;scroll-margin-top:24px}
+.eyebrow{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.06em;color:var(--pen)}
+.lead{font-size:17px;color:var(--muted);max-width:68ch}
+.prose{max-width:70ch;display:grid;gap:12px}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+
+/* hero */
+.hero{display:grid;gap:18px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.hero .stamp{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.tile{background:var(--sheet);padding:16px 18px;display:grid;gap:6px;align-content:start}
+.tile .t{font-size:13px;color:var(--muted)}
+.tile .v{font-family:var(--f-display);font-size:26px;line-height:1.2}
+.tile .v .from{font-family:var(--f-body);font-size:15px;color:var(--muted);font-weight:500}
+.tile .v .arrow{color:var(--muted);font-size:18px;padding:0 4px}
+.tile .v .to{color:var(--pen)}
+.tile .s{font-size:12.5px;color:var(--muted)}
+
+/* sheet = 조서 한 장 */
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:20px 22px;min-width:0}
+.sheet-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:14px}
+.wpno{font-family:var(--f-mono);font-size:12.5px;color:var(--pen);border:1px solid var(--pen);border-radius:3px;padding:1px 6px}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.flow .col{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.flow .col h3{font-size:16px}
+.flow ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.flow .col.kt{border-color:var(--pen);box-shadow:inset 0 3px 0 var(--pen)}
+.who{font-size:12px;font-family:var(--f-mono);color:var(--muted)}
+.assert{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.assert div{border-top:2px solid var(--ink);padding-top:8px;font-size:13.5px;display:grid;gap:4px;min-width:0}
+.assert b{font-size:15px}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{font:inherit;font-size:13.5px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tab:focus-visible,.chip:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.docmeta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;font-size:14px}
+.docmeta div{display:grid;gap:2px;min-width:0}
+.docmeta .k{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;font-size:12px;border-radius:3px;padding:1px 7px;white-space:nowrap}
+.b-hi{background:var(--ok-soft);color:var(--ok)}
+.b-mid{background:var(--warn-soft);color:var(--warn)}
+.b-pen{background:var(--pen-soft);color:var(--pen)}
+.b-blue{background:var(--blue-soft);color:var(--blue)}
+.b-gray{background:var(--soft);color:var(--muted)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--rule);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap;position:sticky;top:0}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.nw{white-space:nowrap}
+.xl th{font-family:var(--f-mono);font-weight:500;font-size:12px}
+.xl td{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
+.xl .meta td{color:var(--muted);background:var(--paper);border-bottom:none}
+tr.flag td{background:var(--pen-soft)}
+
+/* 3-way truth table */
+.tri td.mark{text-align:center;font-family:var(--f-mono);font-weight:600;width:56px}
+.o{color:var(--ok)} .x{color:var(--pen)}
+
+/* workpapers */
+.wps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.wp{display:grid;gap:10px;align-content:start}
+.wp dl{margin:0;display:grid;grid-template-columns:64px 1fr;gap:4px 10px;font-size:14px}
+.wp dt{color:var(--muted);font-size:12.5px;padding-top:2px}
+.wp dd{margin:0;min-width:0}
+.fields{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.6}
+.result{font-size:13.5px;border-left:3px solid var(--rule);padding-left:10px}
+.result.bad{border-color:var(--pen)} .result.warn{border-color:var(--warn)} .result.ok{border-color:var(--ok)}
+
+/* compare */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:4px;padding:4px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--pen);color:var(--pen);background:var(--pen-soft)}
+.res{display:inline-block;font-size:12.5px;font-weight:600;border-radius:3px;padding:1px 8px;white-space:nowrap}
+.r-found{background:var(--ok-soft);color:var(--ok)}
+.r-sign{background:var(--warn-soft);color:var(--warn)}
+.r-miss{background:var(--pen-soft);color:var(--pen)}
+
+/* bars */
+.bars{display:grid;gap:14px}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 120px;gap:12px;align-items:center;font-size:13.5px}
+.track{height:14px;background:var(--soft);border-radius:2px;position:relative;overflow:hidden}
+.fill{position:absolute;inset:0 auto 0 0;background:var(--muted)}
+.fill.pen{background:var(--pen)}
+.bar .val{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+
+/* vat chart */
+.vat{display:grid;gap:6px}
+.vrow{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) 110px;gap:10px;align-items:center;font-size:13px}
+.vtrack{position:relative;height:16px}
+.vtrack .axis{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--muted)}
+.vtrack .seg{position:absolute;top:2px;height:12px;border-radius:1px}
+.seg.pos{background:var(--pen)} .seg.neg{background:var(--blue)}
+.vrow.total{border-top:1px solid var(--rule);padding-top:8px;font-weight:600}
+.vrow .val{text-align:right;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.calc table input{width:64px;font:inherit;font-family:var(--f-mono);font-size:12.5px;text-align:right;padding:2px 6px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);color:var(--ink)}
+.calc tfoot td{font-weight:700;background:var(--soft)}
+.verdict{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;font-size:15px}
+.verdict b{font-family:var(--f-display);font-size:24px}
+
+/* ideas */
+.ideas{display:grid;gap:12px}
+.idea{display:grid;grid-template-columns:120px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:16px 18px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px}
+.idea .tag{display:grid;gap:6px;align-content:start}
+.idea .tag b{font-family:var(--f-display);font-size:17px}
+.idea .k{font-size:12px;color:var(--muted);margin-bottom:2px}
+.idea.top{border-color:var(--pen)}
+ul.tight{margin:0;padding-left:18px;display:grid;gap:4px}
+details{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:10px 16px}
+summary{cursor:pointer;font-weight:600}
+.gloss{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px;margin-top:10px;font-size:14px}
+.gloss b{display:block}
+.files{font-family:var(--f-mono);font-size:12.5px;display:grid;gap:4px;word-break:break-all}
+
+@media (max-width:1000px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:24px;padding-block:24px 64px}
+  nav.index{position:static}
+  nav.index ol{display:flex;flex-wrap:wrap;border-left:none;gap:4px}
+  nav.index a{display:inline-flex;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;margin:0}
+  nav.index .lbl{display:none}
+}
+@media (max-width:760px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow,.wps,.grid2,.calc,.gloss{grid-template-columns:minmax(0,1fr)}
+  .assert{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .docmeta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .idea{grid-template-columns:minmax(0,1fr)}
+  .bar{grid-template-columns:minmax(0,1fr) 96px}.bar .track{grid-column:1/-1;order:3}
+  .vrow{grid-template-columns:minmax(0,1fr) 96px}.vrow .vtrack{grid-column:1/-1;order:3}
+}
+@media (prefers-reduced-motion:no-preference){.fill,.seg{transition:width .5s ease}}
+</style>
+
+<div class="wrap">
+<nav class="index" aria-label="목차">
+  <p class="lbl">조서 색인</p>
+  <ol>
+    <li><a href="#summary"><span class="k">00</span><span>결과 한눈에</span></a></li>
+    <li><a href="#work"><span class="k">01</span><span>회계사가 하는 일</span></a></li>
+    <li><a href="#docs"><span class="k">02</span><span>회사가 내는 자료</span></a></li>
+    <li><a href="#asis"><span class="k">03</span><span>지금 방식의 조서</span></a></li>
+    <li><a href="#compare"><span class="k">04</span><span>두 방식 비교</span></a></li>
+    <li><a href="#impact"><span class="k">05</span><span>성과</span></a></li>
+    <li><a href="#ideas"><span class="k">06</span><span>아이디어 접목</span></a></li>
+    <li><a href="#limits"><span class="k">07</span><span>한계와 파일</span></a></li>
+  </ol>
+</nav>
+
+<main>
+<!-- 00 -->
+<section id="summary" class="hero">
+  <div class="stamp"><span>샘플제조(주) · 2025-12-31 결산</span><span>매출·매출채권 감사</span><span>전부 더미 데이터</span></div>
+  <h1>표본 25건 대신, 매출 <span id="h-pop">435</span>건 전부</h1>
+  <p class="lead">같은 회사의 같은 자료를 두 번 감사했습니다. 한 번은 지금 회계사들이 하는 방식(표본을 뽑아 증빙을 하나씩 대조), 한 번은 K-Tieout 방식(원장·홈택스 세금계산서·은행 입금을 전 건 자동 대사)입니다. 자료에는 감사에서 걸러야 할 이상 거래 11건을 미리 심어 두었고, 두 방식이 각각 몇 건을 찾는지 채점했습니다.</p>
+  <div class="tiles" id="tiles"></div>
+</section>
+
+<!-- 01 -->
+<section id="work">
+  <p class="eyebrow">01 · 회계사가 하는 일</p>
+  <h2>회사 숫자를 믿을 만한지, 다른 출처와 맞대어 확인합니다</h2>
+  <div class="prose">
+    <p>외부감사는 회사가 만든 재무제표가 맞는지 회계사가 증거를 모아 의견을 내는 일입니다. 회계사는 장부를 직접 고치지 않습니다(외부감사법 제6조⑥). 대신 회사 장부의 숫자를 <b>회사 밖에서 생긴 기록</b>과 맞대어 봅니다. 국세청에 전송된 세금계산서, 은행 통장, 거래처의 회신이 그런 기록입니다. 이 맞대는 작업을 <b>대사</b>라고 부르고, 그 과정과 결과를 적은 문서를 <b>감사조서</b>라고 부릅니다.</p>
+    <p>모든 거래를 다 볼 시간이 없기 때문에 지금은 위험이 큰 곳을 정하고 일부를 <b>표본</b>으로 뽑아 확인합니다. 표본 검사는 감사기준이 허용하는 정상적인 방법입니다. 다만 표본에 안 걸린 거래는 보지 못합니다.</p>
+  </div>
+  <div class="flow">
+    <div class="col">
+      <span class="who">회사 경리·재무팀</span>
+      <h3>① 자료를 낸다 (PBC)</h3>
+      <ul><li>합계잔액시산표</li><li>분개장·계정별원장 (더존 등 ERP)</li><li>거래처원장 (거래처별 채권 잔액)</li><li>홈택스 매출 전자세금계산서 목록</li><li>은행 거래내역</li><li>부가세 신고서</li></ul>
+    </div>
+    <div class="col kt">
+      <span class="who">감사팀 1~3년차 회계사</span>
+      <h3>② 맞대어 보고 조서를 쓴다</h3>
+      <ul><li>총괄표: 장부 잔액 = 시산표 = 전기 조서</li><li>명세대사: 거래처 잔액 합계 = 장부</li><li>채권채무조회: 거래처에 직접 잔액 확인</li><li>부가세대사: 신고 매출 = 장부 매출</li><li>Cut-off: 결산일 전후 매출의 귀속연도</li><li>증빙 검토: 표본 전표 ↔ 세금계산서·출고증·입금</li></ul>
+      <p class="small muted">K-Tieout이 들어가는 자리입니다. 증빙 검토·부가세대사·Cut-off를 전 건으로 바꾸고, 조회 차이의 원인을 미리 알려 줍니다.</p>
+    </div>
+    <div class="col">
+      <span class="who">매니저·담당 이사</span>
+      <h3>③ 검토하고 판단한다</h3>
+      <ul><li>조서 검토, 수정 요청 (리뷰 코멘트)</li><li>회사에 수정분개 요구 여부 판단</li><li>추가 절차가 필요한지 결정</li><li>감사의견 (적정·한정·부적정·의견거절)</li></ul>
+      <p class="small muted">판단은 끝까지 회계사가 합니다. 도구는 판단할 자료를 준비할 뿐입니다.</p>
+    </div>
+  </div>
+  <div class="sheet">
+    <div class="sheet-head"><h3>회계사가 매출채권에서 확인하는 다섯 가지</h3><span class="small muted">감사기준에서 '경영진 주장'이라 부르는 것</span></div>
+    <div class="assert">
+      <div><b>실재성</b><span class="muted">장부의 매출·채권이 실제로 있었나 (가공매출이 아닌가)</span></div>
+      <div><b>완전성</b><span class="muted">있었던 매출이 장부에 빠짐없이 들어갔나</span></div>
+      <div><b>기간귀속</b><span class="muted">2025년 매출이 2025년 장부에 들어갔나 (Cut-off)</span></div>
+      <div><b>정확성</b><span class="muted">금액이 증빙과 같은가</span></div>
+      <div><b>평가</b><span class="muted">받을 수 있는 돈인가 (오래 안 들어온 채권)</span></div>
+    </div>
+  </div>
+  <div class="sheet">
+    <div class="sheet-head"><h3>3방향 대사: 세 기록의 어긋남이 뜻하는 것</h3><span class="small muted">K-Tieout이 거래마다 판정하는 기준</span></div>
+    <div class="tbl"><table class="tri"><thead><tr><th>원장 매출</th><th>세금계산서</th><th>은행 입금</th><th>뜻</th><th>이번 데모의 실제 사례</th></tr></thead><tbody id="tri"></tbody></table></div>
+    <p class="small muted" style="margin-top:10px">매출 세금계산서는 회사가 스스로 발행하므로 그것만으로는 증거가 약합니다. 은행 입금은 제3자 기록이라 세 가지를 함께 묶어야 증거가 됩니다.</p>
+  </div>
+  <details>
+    <summary>용어 풀이</summary>
+    <div class="gloss">
+      <p><b>PBC (Prepared by Client)</b>회계사가 회사에 요청해 받는 자료 목록.</p>
+      <p><b>조서 (Working Paper)</b>감사 절차와 결과를 적은 문서. 8년 보존 의무(외부감사법 제19조, 원문 대조 필요).</p>
+      <p><b>Tick-Mark</b>조서 숫자 옆에 확인 방법을 표시하는 기호. PTB=시산표와 대사, GL=원장과 일치, F=합계 검증, V=증빙 대조.</p>
+      <p><b>수행중요성</b>이 금액 이상 틀리면 문제로 본다는 기준. 이 데모에서는 37,500,000원(가정).</p>
+      <p><b>MUS (금액단위표본추출)</b>금액이 클수록 뽑힐 확률이 커지는 표본 방식. 1원마다 동일한 확률로 선택.</p>
+      <p><b>채권채무조회</b>회계사가 거래처에 직접 "샘플제조에 갚을 돈이 얼마냐"고 묻는 절차. KICPA·NICE 전자조회로 발송.</p>
+      <p><b>수정세금계산서</b>반품·에누리 등으로 이미 발행한 세금계산서 금액을 고칠 때 발행. 마이너스 금액으로 나옴.</p>
+      <p><b>가수금</b>입금됐는데 무슨 돈인지 아직 정하지 못했을 때 임시로 넣는 계정.</p>
+    </div>
+  </details>
+</section>
+
+<!-- 02 -->
+<section id="docs">
+  <p class="eyebrow">02 · 회사가 내는 자료</p>
+  <h2>실제 양식의 항목 그대로 만든 더미 자료 7종</h2>
+  <p class="lead">아래 표의 열 이름과 시트 배치는 실제 내려받기 파일을 따랐습니다. 형식 근거의 신뢰도를 자료마다 표시했습니다. 금액·회사명·사업자번호는 모두 가상입니다.</p>
+  <div class="tabs" role="tablist" id="doctabs"></div>
+  <div class="sheet" id="docpanel" role="tabpanel"></div>
+</section>
+
+<!-- 03 -->
+<section id="asis">
+  <p class="eyebrow">03 · 지금 방식의 조서 (As-Is)</p>
+  <h2>2년차 회계사가 표본으로 작성한 조서 7장</h2>
+  <p class="lead">조서 번호와 항목은 중소회계법인협의회 감사마스터의 조서 화면 구성을 따랐습니다. 각 조서가 무엇을 확인하는지, 지금은 어떻게 하는지, 이번 데모에서 무엇이 나왔는지 정리했습니다.</p>
+  <div class="wps" id="wps"></div>
+</section>
+
+<!-- 04 -->
+<section id="compare">
+  <p class="eyebrow">04 · 두 방식 비교</p>
+  <h2>심어 둔 이상 거래 11건, 누가 찾았나</h2>
+  <p class="lead">지금 방식의 결과는 표본 한 번을 뽑은 결과입니다. 운의 영향을 줄이려고 증빙 대조로 드러나는 건에는 MUS에서 그 전표가 표본에 뽑힐 확률(전표 금액 ÷ 표본간격 <span class="mono" id="interval"></span>원)을 함께 적었습니다.</p>
+  <div class="chips" id="chips">
+    <button class="chip" aria-pressed="true" data-f="all">전체 11건</button>
+    <button class="chip" aria-pressed="false" data-f="miss">지금 방식에서 안 보인 것</button>
+    <button class="chip" aria-pressed="false" data-f="sign">징후만 보인 것</button>
+  </div>
+  <div class="tbl"><table><thead><tr><th>ID</th><th>무슨 일이 있었나</th><th>주장</th><th class="r">금액(원)</th><th>지금 방식</th><th>K-Tieout</th></tr></thead><tbody id="cmp"></tbody></table></div>
+  <p class="small muted" id="fp"></p>
+  <div class="sheet">
+    <div class="sheet-head"><h3>K-Tieout이 회계사에게 넘기는 검토 목록</h3><span class="wpno">KT-01</span></div>
+    <p class="small muted" style="margin-bottom:10px">회계사 화면에는 이 목록만 남습니다. 나머지 일치 건은 전수대사표(KT-05)에 근거와 함께 기록됩니다. '회계사 판단' 칸은 비워 둡니다.</p>
+    <div class="tbl"><table><thead><tr><th>No</th><th>유형</th><th>위험</th><th>거래처</th><th class="r">금액(원)</th><th>내용</th><th>권고 확인 절차</th></tr></thead><tbody id="exlist"></tbody></table></div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="impact">
+  <p class="eyebrow">05 · 성과</p>
+  <h2>커버리지, 원인 규명, 작업량</h2>
+  <div class="grid2">
+    <div class="sheet">
+      <div class="sheet-head"><h3>매출 증빙 대조 범위</h3><span class="small muted">2025년 원장 매출 기준</span></div>
+      <div class="bars" id="covbars"></div>
+    </div>
+    <div class="sheet">
+      <div class="sheet-head"><h3>매칭 규칙별 처리 건수</h3><span class="small muted">사람이 하던 대조를 규칙으로</span></div>
+      <div class="tbl"><table><thead><tr><th>규칙</th><th class="r">건수</th></tr></thead><tbody id="rules"></tbody></table></div>
+    </div>
+  </div>
+  <div class="sheet">
+    <div class="sheet-head"><h3>부가세대사 차이 <span class="num" id="vat-total"></span>원, 어디서 왔나</h3><span class="wpno">4000P-2</span></div>
+    <p class="small" style="margin-bottom:14px"><span class="badge b-pen">지금</span> 신고서와 장부의 연간 차이만 보이고 "회사에 소명 요청, 결론 보류"로 남습니다. <span class="badge b-hi">K-Tieout</span> 같은 차이를 거래 단위로 분해합니다. 미설명 차이 <b id="vat-unexp"></b>원.</p>
+    <div class="vat" id="vat"></div>
+    <div class="legend" style="margin-top:10px"><span><i style="background:var(--pen)"></i>장부가 신고보다 많게 만든 항목</span><span><i style="background:var(--blue)"></i>장부가 신고보다 적게 만든 항목</span></div>
+  </div>
+  <div class="sheet">
+    <div class="sheet-head"><h3>채권채무조회 회신 차이, 회신 전에 이미 설명됨</h3><span class="wpno">4000C-3</span></div>
+    <p class="small" style="margin-bottom:10px">조회서는 감사기준상 계속 보내야 하는 외부 증거입니다. 달라지는 것은 차이가 왔을 때입니다. 지금은 회사에 차이조정표를 요청하고 기다립니다. K-Tieout은 거래처별 '증빙기준 잔액'을 미리 계산해 두어서 회신이 오는 즉시 원인이 연결됩니다.</p>
+    <div class="tbl"><table><thead><tr><th>거래처</th><th class="r">장부 잔액</th><th class="r">회신 금액</th><th class="r">차이</th><th>지금 방식</th><th>K-Tieout 설명</th></tr></thead><tbody id="conf"></tbody></table></div>
+    <p class="small muted" style="margin-top:10px" id="conf-extra"></p>
+  </div>
+  <div class="sheet">
+    <div class="sheet-head"><h3>작업량 계산기</h3><span class="badge b-mid">분 단위는 가정치 · 파일럿에서 실측</span></div>
+    <p class="small" style="margin-bottom:12px">건수는 이번 데모에서 실제로 나온 숫자입니다. 건당 시간은 임의의 가정이라 직접 바꿔 볼 수 있습니다. 회사 회신을 기다리는 날짜는 넣지 않았습니다.</p>
+    <div class="calc">
+      <div class="tbl"><table><thead><tr><th>지금 방식 작업</th><th class="r">건수</th><th class="r">분/건</th><th class="r">분</th></tr></thead><tbody id="calc-a"></tbody><tfoot><tr><td colspan="3">합계</td><td class="r" id="sum-a"></td></tr></tfoot></table></div>
+      <div class="tbl"><table><thead><tr><th>K-Tieout 작업</th><th class="r">건수</th><th class="r">분/건</th><th class="r">분</th></tr></thead><tbody id="calc-b"></tbody><tfoot><tr><td colspan="3">합계</td><td class="r" id="sum-b"></td></tr></tfoot></table></div>
+    </div>
+    <div class="verdict" style="margin-top:14px" id="verdict"></div>
+    <p class="small muted" style="margin-top:8px">시간보다 큰 차이는 범위입니다. 지금 방식의 시간으로는 매출 금액의 <span id="v-asis-cov"></span>를 보고, K-Tieout 방식의 시간으로는 100%를 봅니다.</p>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="ideas">
+  <p class="eyebrow">06 · 아이디어 접목</p>
+  <h2>같은 데이터 위에서 아이디어가 이어지는 방식</h2>
+  <p class="lead">아이디어 문서의 후보(A~F)를 이 데모 데이터에 대 보았습니다. 데모를 만들면서 새로 보인 기능 후보 셋도 함께 적었습니다. 모두 같은 3종 입력과 같은 정규화 단계를 공유합니다.</p>
+  <div class="ideas" id="idealist"></div>
+</section>
+
+<!-- 07 -->
+<section id="limits">
+  <p class="eyebrow">07 · 한계와 파일</p>
+  <h2>이 데모가 증명하지 않는 것</h2>
+  <div class="prose">
+    <ul class="tight">
+      <li><b>데이터는 가상입니다.</b> 이상 거래는 제가 심었고 엔진도 같은 데이터로 다듬었습니다. 실제 회사 자료는 더 지저분합니다(거래처명 표기, 어음 결제, 선수금, 외화, 여러 계좌). 11/11 발견, 오탐 0은 실데이터에서 그대로 나오지 않습니다.</li>
+      <li><b>지금 방식의 결과는 단순화했습니다.</b> 실제 감사팀은 위험평가에 따라 절차를 더하거나(예: 후속기간 반품 검토, 연령분석) 표본 수를 늘립니다. 숙련된 회계사는 여기서 '미발견'으로 둔 일부를 다른 절차로 찾을 수 있습니다.</li>
+      <li><b>양식 신뢰도가 자료마다 다릅니다.</b> 홈택스 목록과 은행 거래내역은 실물 파일을 실측한 기록을 따랐습니다. 더존 원장·시산표 형식은 추정이고, 감사마스터 조서는 화면을 본뜬 공개 저장소를 기준으로 했습니다. 현직 회계사 확인이 필요합니다.</li>
+      <li><b>시간 절감 수치는 없습니다.</b> 계산기의 분 단위는 가정입니다. 효과는 파일럿에서 같은 계정을 두 방식으로 수행해 측정해야 합니다.</li>
+      <li><b>전수대사는 표본 감사를 대체하지 않습니다.</b> 외부조회, 실사, 회계사 판단은 그대로 필요합니다. 도구는 장부를 고치지 않고 수정을 제안만 합니다.</li>
+    </ul>
+  </div>
+  <div class="sheet">
+    <div class="sheet-head"><h3>로컬 파일</h3><span class="small muted">poc/ 폴더, 스크립트 실행 순서: generate → ktieout → asis → compare</span></div>
+    <div class="files" id="files"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const D = {"anomalies": [{"id": "A1", "type": "원장O·세금계산서X·입금X", "assertion": "실재성", "desc": "기말 직전 신규 거래처 매출이 원장에만 있음. 세금계산서·입금 모두 없음 (가공매출 의심)", "amount": 19800000, "asis": "미발견", "asis_proc": "-", "asis_why": "표본 25건에 포함되지 않음, 조회 대상도 아님", "mus_prob": 0.044451173364287944, "tobe": "발견", "tobe_no": "EX-10", "tobe_detail": "2025-12-15 19,800,000원, 세금계산서·입금(2026-02-28까지) 모두 없음"}, {"id": "A2", "type": "원장O·세금계산서X·입금O", "assertion": "발생(세무)", "desc": "매출·입금은 있으나 세금계산서 미발행 (부가세 신고 누락 위험)", "amount": 8030000, "asis": "미발견", "asis_proc": "-", "asis_why": "표본 25건에 포함되지 않음", "mus_prob": 0.01802742030885011, "tobe": "발견", "tobe_no": "EX-09", "tobe_detail": "2025-06-18 8,030,000원 매출·입금(B0306) 있으나 세금계산서 없음"}, {"id": "A3", "type": "세금계산서O·원장X", "assertion": "완전성", "desc": "세금계산서 발행·입금 완료, 원장 매출 미계상 (입금은 가수금으로 처리)", "amount": 13167000, "asis": "미발견", "asis_proc": "4000P-2", "asis_why": "원장에서 표본을 뽑는 방향이라 원장에 없는 매출은 표본에 안 잡힘. 부가세대사 총액 차이에 섞여 있음", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-03", "tobe_detail": "2025-09-22 발행 13,167,000원, 2025년·2026년 원장 어디에도 매출 없음 / 입금 2025-11-03 13,167,000원"}, {"id": "A4", "type": "금액 불일치", "assertion": "정확성", "desc": "원장 공급가액 25,300,000 vs 세금계산서 23,500,000 (자릿수 전치 입력). 채권 1,980,000 과대", "amount": 1980000, "asis": "징후", "asis_proc": "4000C-3", "asis_why": "조회 차이 1,980,000원 인지, 원인은 회사 소명 대기", "mus_prob": 0.06247859367313806, "tobe": "발견", "tobe_no": "EX-01", "tobe_detail": "원장 27,830,000 vs 세금계산서 25,850,000 (공급가액 25,300,000 vs 23,500,000)"}, {"id": "A5", "type": "수정세금계산서 원장 미반영", "assertion": "정확성·실재성", "desc": "10월 반품 수정세금계산서(-6,600,000)가 원장에 반영 안 됨. 채권 6,600,000 과대", "amount": 6600000, "asis": "징후", "asis_proc": "4000C-3", "asis_why": "조회 차이 6,600,000원 인지, 원인은 회사 소명 대기", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-04", "tobe_detail": "2025-10-14 수정세금계산서 -6,600,000원 (당초 20250910-41000002-93ba5505), 원장에 매출 차감 없음"}, {"id": "A6", "type": "기간귀속(당기 과대)", "assertion": "기간귀속", "desc": "원장 2025-12-30 계상, 세금계산서 작성일·출고 2026-01-05. 2025년 매출 과대", "amount": 52800000, "asis": "발견", "asis_proc": "4000P-5", "asis_why": "Cut-off 테스트에서 출고일과 회계기간 불일치 확인", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-05", "tobe_detail": "원장 2025-12-30 / 세금계산서 작성일 2026-01-05"}, {"id": "A7", "type": "기간귀속(당기 과소)", "assertion": "기간귀속·완전성", "desc": "세금계산서 작성일 2025-12-29, 원장은 2026-01-05 계상. 2025년 매출 과소", "amount": 9884160, "asis": "미발견", "asis_proc": "-", "asis_why": "Cut-off 기준금액(1천만원) 미만이라 테스트 대상에서 빠짐", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-06", "tobe_detail": "원장 2026-01-05 / 세금계산서 작성일 2025-12-29"}, {"id": "A8", "type": "기말 직전 매출 후속 취소", "assertion": "실재성·기간귀속", "desc": "2025-12-26 대형 매출이 2026-01-16 전액 반품(수정세금계산서). 밀어내기 매출 의심", "amount": 87972500, "asis": "미발견", "asis_proc": "4000P-5", "asis_why": "12/26 출고 사실은 있어 Cut-off는 '일치'. 1월 반품은 후속기간 수정세금계산서를 따로 보지 않으면 안 보임", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-07", "tobe_detail": "2025-12-26 매출 87,972,500원이 2026-01-16 수정세금계산서로 -87,972,500원 취소"}, {"id": "A9", "type": "제3자 명의 입금", "assertion": "실재성(특수관계)", "desc": "태성기계 매출대금이 '태성홀딩스' 명의로 입금. 거래 상대방 확인 필요", "amount": 16477120, "asis": "미발견", "asis_proc": "-", "asis_why": "입금자명까지 대조하는 절차 없음", "mus_prob": 0.03699127866990789, "tobe": "발견", "tobe_no": "EX-08", "tobe_detail": "입금자 '태성홀딩스' 2건 (2025-09-29 8,238,000, 2025-10-29 8,239,120) → 태성기계(주) 채권(20250710-41000002-b8cec364)과 금액 일치"}, {"id": "A10", "type": "원장 중복 계상", "assertion": "실재성", "desc": "같은 세금계산서로 원장에 두 번 계상. 채권·매출 과대", "amount": 13200000, "asis": "미발견", "asis_proc": "-", "asis_why": "원장 금액과 맞는 세금계산서가 있어 표본 대조로는 정상으로 보임", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-02", "tobe_detail": "2025-11-10 같은 거래처·같은 금액 전표가 2건, 세금계산서는 1건(20251110-41000004-7b6dbc11)"}, {"id": "A11", "type": "장기 미회수", "assertion": "평가", "desc": "3월·5월 청구분이 기말 후 2개월까지 미입금 (대손충당금 검토 필요)", "amount": 28431370, "asis": "발견 가능", "asis_proc": "4000C-4", "asis_why": "회사 제시 연령분석표를 검토하면 드러남 (본 데모 As-Is에는 4000C-4 미포함)", "mus_prob": null, "tobe": "발견", "tobe_no": "EX-11, EX-12", "tobe_detail": "작성일 2025-03-12, 기말까지 294일 경과, 2026-02-28까지 입금 없음"}], "mus_interval": 445432561.2, "false_positives": [], "asis_counts": {"발견": 1, "발견 가능": 1, "징후": 2, "미발견": 7}, "tobe_counts": {"발견": 11, "미발견": 0}, "coverage": {"asis_vouch_n": 25, "asis_vouch_amt": 1561219110, "pop_n": 435, "pop_amt": 11135814030, "asis_cutoff_n": 17, "tobe_cutoff_n": 38, "asis_conf_n": 10, "asis_conf_amt": 1809204140, "ar": 2551537690, "tobe_matched_n": 431, "tobe_matched_amt": 11066954030, "tobe_3way_n": 402, "tobe_3way_amt": 10006425330, "invoices": 434, "deposits": 506}, "asis_effort": {"총괄표 작성 (시산표·전기조서 대사)": 1, "명세 거래처 행 검토": 41, "조회 대상 선정": 1, "조회서 발송·회신 관리": 10, "회신 금액 대사": 10, "조회 차이 원인 조사 (회사 소명 요청·대조)": 3, "부가세대사 (분기 합계 작성)": 4, "부가세 차이 원인 조사 (회사 소명 요청·대조)": 1, "Cut-off 증빙 대조 (출고증·세금계산서)": 17, "증빙 대조 (세금계산서·출고증·통장 각 1건)": 75}, "asis_findings": [{"proc": "4000C-3", "cust": "00102", "cust_name": "(주)대성테크", "level": "징후", "desc": "조회 차이 52,800,000원 → 회사에 차이 내역 소명 요청 (원인 미규명)", "amount": 52800000}, {"proc": "4000C-3", "cust": "00106", "cust_name": "(주)세진오토텍", "level": "징후", "desc": "조회 차이 1,980,000원 → 회사에 차이 내역 소명 요청 (원인 미규명)", "amount": 1980000}, {"proc": "4000C-3", "cust": "00107", "cust_name": "우림전자(주)", "level": "징후", "desc": "조회 차이 6,600,000원 → 회사에 차이 내역 소명 요청 (원인 미규명)", "amount": 6600000}, {"proc": "4000P-2", "cust": null, "cust_name": "", "level": "총액", "desc": "신고서 vs 손익계산서 연간 차이 72,144,400원 인지 → 원인 분해는 회사 소명에 의존", "amount": 72144400}, {"proc": "4000P-5", "cust": "00102", "cust_name": "(주)대성테크", "level": "발견", "desc": "금기매출 2025-12-30 전표, 출고일 2026-01-05 → 회계기간 불일치", "amount": 52800000}, {"proc": "4000P-10", "cust": "00105", "cust_name": "(주)동원정밀", "level": "징후", "desc": "표본 12: 입금 미확인(후속기간)", "amount": 75215360}, {"proc": "4000P-10", "cust": "00136", "cust_name": "(주)경인오토", "level": "징후", "desc": "표본 16: 입금 미확인(후속기간)", "amount": 27967280}, {"proc": "4000P-10", "cust": "00106", "cust_name": "(주)세진오토텍", "level": "징후", "desc": "표본 18: 입금 미확인(후속기간)", "amount": 46583680}, {"proc": "4000P-10", "cust": "00106", "cust_name": "(주)세진오토텍", "level": "징후", "desc": "표본 21: 입금 미확인(후속기간)", "amount": 21463750}, {"proc": "4000P-10", "cust": "00101", "cust_name": "한결산업(주)", "level": "징후", "desc": "표본 25: 입금 미확인(후속기간)", "amount": 84229860}], "asis_coverage": {"vouch_n": 25, "vouch_amt": 1561219110, "pop_n": 435, "pop_amt": 11135814030, "cutoff_n": 17, "conf_n": 10, "conf_amt": 1809204140, "ar": 2551537690, "conf_reply_n": 10, "conf_diff_n": 3}, "tobe_effort": {"자료 3종 업로드·실행": 1, "조회서 발송·회신 관리 (외부조회는 그대로 필요)": 10, "검토 필요 항목 확인 (건별 판단·회사 확인)": 12, "추정 배분·미배정 입금 확인": 6, "자동 생성 조서 검토·서명": 6}, "rules": {"원장-세금계산서: 일자·금액 일치": 504, "원장-세금계산서: 금액 일치, 일자 차이": 2, "원장-세금계산서: 금액 불일치(쌍)": 1, "입금-채권: 단건 일치": 330, "입금-채권: 수수료 차감 입금": 52, "입금-채권: 합산 입금": 3, "입금-채권: 분할 입금": 110, "입금-채권: 미배정": 1, "입금-채권: 추정 배분(오래된 채권부터)": 5, "입금-채권: 제3자 입금 의심": 2}, "vat": {"return": [3031734800, 2377473200, 2114036000, 2528078900], "hometax": [3031734800, 2377473200, 2114036000, 2528078900], "ledger": [3031734800, 2384773200, 2102066000, 2604893300], "items": [{"no": "EX-01", "label": "금액 불일치 · (주)세진오토텍", "v": 1800000}, {"no": "EX-02", "label": "원장 중복 계상 의심 · (주)광명금속", "v": 12000000}, {"no": "EX-03", "label": "세금계산서O·원장X · (주)서해정밀", "v": -11970000}, {"no": "EX-04", "label": "수정세금계산서 원장 미반영 · 우림전자(주)", "v": 6000000}, {"no": "EX-05", "label": "기간귀속 (당기 과대) · (주)대성테크", "v": 48000000}, {"no": "EX-06", "label": "기간귀속 (당기 과소) · (주)성우하이텍", "v": -8985600}, {"no": "EX-09", "label": "원장O·세금계산서X·입금O · (주)가람전기", "v": 7300000}, {"no": "EX-10", "label": "원장O·세금계산서X·입금X · (주)소망유통", "v": 18000000}]}, "asis_vat_diff": 72144400, "confirm": [{"cust": "00101", "ledger": 468234470, "reply": 468234470, "diff": 0, "name": "한결산업(주)", "explain": ["EX-07"], "evidence": 468234470}, {"cust": "00102", "ledger": 376164580, "reply": 323364580, "diff": 52800000, "name": "(주)대성테크", "explain": ["EX-05"], "evidence": 323364580}, {"cust": "00105", "ledger": 186515710, "reply": 186515710, "diff": 0, "name": "(주)동원정밀", "explain": [], "evidence": 186515710}, {"cust": "00106", "ledger": 151661730, "reply": 149681730, "diff": 1980000, "name": "(주)세진오토텍", "explain": ["EX-01"], "evidence": 149681730}, {"cust": "00107", "ledger": 141319310, "reply": 134719310, "diff": 6600000, "name": "우림전자(주)", "explain": ["EX-04"], "evidence": 134719310}, {"cust": "00103", "ledger": 135923260, "reply": 135923260, "diff": 0, "name": "(주)미래산업", "explain": [], "evidence": 135923260}, {"cust": "00135", "ledger": 122941500, "reply": 122941500, "diff": 0, "name": "(주)에이스정공", "explain": [], "evidence": 122941500}, {"cust": "00114", "ledger": 92125880, "reply": 92125880, "diff": 0, "name": "(주)가람전기", "explain": ["EX-09"], "evidence": 92125880}, {"cust": "00118", "ledger": 67577070, "reply": 67577070, "diff": 0, "name": "(주)한울산업", "explain": [], "evidence": 67577070}, {"cust": "00113", "ledger": 66740630, "reply": 66740630, "diff": 0, "name": "해솔기계(주)", "explain": [], "evidence": 66740630}], "exceptions": [{"no": "EX-01", "kind": "금액 불일치", "assertion": "정확성", "risk": "중간", "amount": 1980000, "detail": "원장 27,830,000 vs 세금계산서 25,850,000 (공급가액 25,300,000 vs 23,500,000)", "action": "회사에 정정 근거 요청, 수정분개 필요 여부 판단", "ledger": "L0374", "appr": "20251112-41000005-88f608f5", "cust": "00106", "cust_name": "(주)세진오토텍", "deposit": null}, {"no": "EX-02", "kind": "원장 중복 계상 의심", "assertion": "실재성", "risk": "높음", "amount": 13200000, "detail": "2025-11-10 같은 거래처·같은 금액 전표가 2건, 세금계산서는 1건(20251110-41000004-7b6dbc11)", "action": "중복 전표 여부 확인, 수정분개 필요 여부 판단", "ledger": "L0367", "appr": "20251110-41000004-7b6dbc11", "cust": "00108", "cust_name": "(주)광명금속", "deposit": null}, {"no": "EX-03", "kind": "세금계산서O·원장X", "assertion": "완전성", "risk": "높음", "amount": -13167000, "detail": "2025-09-22 발행 13,167,000원, 2025년·2026년 원장 어디에도 매출 없음 / 입금 2025-11-03 13,167,000원", "action": "매출 누락 여부 확인 (입금 처리 계정 확인)", "ledger": null, "appr": "20250922-41000002-4ccbb4df", "cust": "00117", "cust_name": "(주)서해정밀", "deposit": null}, {"no": "EX-04", "kind": "수정세금계산서 원장 미반영", "assertion": "정확성·실재성", "risk": "높음", "amount": -6600000, "detail": "2025-10-14 수정세금계산서 -6,600,000원 (당초 20250910-41000002-93ba5505), 원장에 매출 차감 없음", "action": "반품·에누리 사실 확인, 매출·채권 차감 분개 필요 여부 판단", "ledger": null, "appr": "20251014-41000003-6b44ebdc", "cust": "00107", "cust_name": "우림전자(주)", "deposit": null}, {"no": "EX-05", "kind": "기간귀속 (당기 과대)", "assertion": "기간귀속", "risk": "높음", "amount": 52800000, "detail": "원장 2025-12-30 / 세금계산서 작성일 2026-01-05", "action": "출고증·인수증으로 실제 인도일 확인, 귀속연도 판단", "ledger": "L0427", "appr": "20260105-41000006-b25da000", "cust": "00102", "cust_name": "(주)대성테크", "deposit": null}, {"no": "EX-06", "kind": "기간귀속 (당기 과소)", "assertion": "기간귀속", "risk": "높음", "amount": -9884160, "detail": "원장 2026-01-05 / 세금계산서 작성일 2025-12-29", "action": "출고증·인수증으로 실제 인도일 확인, 귀속연도 판단", "ledger": "L0440", "appr": "20251229-41000002-d05109da", "cust": "00121", "cust_name": "(주)성우하이텍", "deposit": null}, {"no": "EX-07", "kind": "기말 직전 매출 후속 취소", "assertion": "실재성·기간귀속", "risk": "높음", "amount": 87972500, "detail": "2025-12-26 매출 87,972,500원이 2026-01-16 수정세금계산서로 -87,972,500원 취소", "action": "반품 사유·물류 기록 확인, 당기 매출 인식 적정성 판단", "ledger": null, "appr": "20251226-41000002-facb7499", "cust": "00101", "cust_name": "한결산업(주)", "deposit": null}, {"no": "EX-08", "kind": "제3자 명의 입금", "assertion": "실재성(거래 상대방)", "risk": "중간", "amount": 16477120, "detail": "입금자 '태성홀딩스' 2건 (2025-09-29 8,238,000, 2025-10-29 8,239,120) → 태성기계(주) 채권(20250710-41000002-b8cec364)과 금액 일치", "action": "입금자와 매출처 관계 확인 (특수관계자 여부 포함)", "ledger": null, "appr": "20250710-41000002-b8cec364", "cust": "00104", "cust_name": "태성기계(주)", "deposit": "B0383, B0431"}, {"no": "EX-09", "kind": "원장O·세금계산서X·입금O", "assertion": "발생(세무)", "risk": "중간", "amount": 8030000, "detail": "2025-06-18 8,030,000원 매출·입금(B0306) 있으나 세금계산서 없음", "action": "세금계산서 미발행 사유 확인, 부가세 신고 누락 여부 확인", "ledger": "L0208", "appr": null, "cust": "00114", "cust_name": "(주)가람전기", "deposit": null}, {"no": "EX-10", "kind": "원장O·세금계산서X·입금X", "assertion": "실재성", "risk": "매우 높음", "amount": 19800000, "detail": "2025-12-15 19,800,000원, 세금계산서·입금(2026-02-28까지) 모두 없음", "action": "계약서·출고증·거래처 실체 확인, 외부조회 우선 대상", "ledger": "L0413", "appr": null, "cust": "00141", "cust_name": "(주)소망유통", "deposit": null}, {"no": "EX-11", "kind": "장기 미회수", "assertion": "평가", "risk": "중간", "amount": 2218150, "detail": "작성일 2025-03-12, 기말까지 294일 경과, 2026-02-28까지 입금 없음", "action": "회수 가능성 검토, 대손충당금 적정성 판단", "ledger": null, "appr": "20250312-41000002-31bab21e", "cust": "00103", "cust_name": "(주)미래산업", "deposit": null}, {"no": "EX-12", "kind": "장기 미회수", "assertion": "평가", "risk": "중간", "amount": 26213220, "detail": "작성일 2025-05-06, 기말까지 239일 경과, 2026-02-28까지 입금 없음", "action": "회수 가능성 검토, 대손충당금 적정성 판단", "ledger": null, "appr": "20250506-41000003-ab9cfbac", "cust": "00103", "cust_name": "(주)미래산업", "deposit": null}], "previews": {"tb": {"meta": ["합 계 잔 액 시 산 표", "회사명 : 샘플제조(주)", "기  간 : 2025년 12월 31일 현재", "차      변 · 계 정 과 목 · 대      변"], "head": ["잔  액", "합  계", "", "합  계", "잔  액"], "rows": [["3,600,221,340", "12,011,000,340", "보통예금", "8,410,779,000", "0"], ["2,551,537,690", "13,294,051,030", "외상매출금", "10,742,513,340", "0"], ["153,169,900", "585,455,900", "부가세대급금", "432,286,000", "0"], ["175,636,770", "5,854,559,000", "원재료", "5,678,922,230", "0"], ["2,400,000,000", "2,400,000,000", "기계장치", "0", "0"], ["0", "0", "감가상각누계액", "990,000,000", "990,000,000"]], "total_rows": 20}, "journal": {"meta": ["분 개 장", "회사명 : 샘플제조(주)", "기  간 : 2025년 01월 01일 ~ 2025년 12월 31일"], "head": ["일자", "번호", "구분", "계정코드", "계정과목", "거래처코드", "거래처명", "적요", "차변", "대변"], "rows": [["2025-01-02", "00001", "차변", "108", "외상매출금", "00112", "(주)다온시스템", "제품매출 기어세트 G-12 외 1건", "20,693,750", "0"], ["2025-01-02", "00001", "대변", "404", "제품매출", "00112", "(주)다온시스템", "제품매출 기어세트 G-12 외 1건", "0", "18,812,500"], ["2025-01-02", "00001", "대변", "255", "부가세예수금", "00112", "(주)다온시스템", "제품매출 기어세트 G-12 외 1건", "0", "1,881,250"], ["2025-01-03", "00001", "차변", "108", "외상매출금", "00112", "(주)다온시스템", "제품매출 금형부품 M-07 외 1건", "97,133,080", "0"], ["2025-01-03", "00001", "대변", "404", "제품매출", "00112", "(주)다온시스템", "제품매출 금형부품 M-07 외 1건", "0", "88,302,800"], ["2025-01-03", "00001", "대변", "255", "부가세예수금", "00112", "(주)다온시스템", "제품매출 금형부품 M-07 외 1건", "0", "8,830,280"]], "total_rows": 2678}, "ledger": {"meta": ["계 정 별 원 장", "회사명 : 샘플제조(주)", "기  간 : 2025년 01월 01일 ~ 2025년 12월 31일        계정과목 : 108 외상매출금"], "head": ["일자", "적요", "코드", "거래처", "차변", "대변", "잔액"], "rows": [["", "[전기이월]", "", "", "2,158,237,000", "0", "2,158,237,000"], ["01-02", "제품매출 기어세트 G-12 외 1건", "00112", "(주)다온시스템", "20,693,750", "0", "2,178,930,750"], ["01-03", "제품매출 금형부품 M-07 외 1건", "00112", "(주)다온시스템", "97,133,080", "0", "2,276,063,830"], ["01-03", "제품매출 샤프트 S-30", "00135", "(주)에이스정공", "8,850,600", "0", "2,284,914,430"], ["01-06", "제품매출 정밀가공부품 A-100 외 1건", "00134", "케이원텍(주)", "26,818,550", "0", "2,311,732,980"], ["01-07", "제품매출 정밀가공부품 A-100 외 1건", "00104", "태성기계(주)", "43,250,020", "0", "2,354,983,000"]], "total_rows": 885}, "subledger": {"meta": ["거 래 처 원 장", "회사명 : 샘플제조(주)", "기  간 : 2025년 01월 01일 ~ 2025년 12월 31일        계정과목 : 108 외상매출금        [잔액]"], "head": ["코드", "거래처", "등록번호", "대표자명", "전기이월", "차변", "대변", "잔액"], "rows": [["00101", "한결산업(주)", "100-81-36801", "김민수", "360,533,000", "1,992,697,960", "1,884,996,490", "468,234,470"], ["00102", "(주)대성테크", "137-86-30287", "이서연", "191,498,000", "877,028,020", "692,361,440", "376,164,580"], ["00103", "(주)미래산업", "174-86-42020", "박지훈", "160,877,000", "514,064,100", "539,017,840", "135,923,260"], ["00104", "태성기계(주)", "211-87-82999", "최유진", "117,311,000", "492,647,980", "544,485,370", "65,473,610"], ["00105", "(주)동원정밀", "248-88-81647", "정하늘", "68,715,000", "504,231,860", "386,431,150", "186,515,710"]], "total_rows": 42}, "hometax": {"meta": ["사업자 등록번호 · 123-81-45678 · 상호 · 샘플제조(주) · 대표자 명 · 박정민", "총 합계금액 · 11,056,455,190 · 총 공급가액 · 10,051,322,900 · 총 세액 · 1,005,132,290", "매출 전자(수정)세금계산서 목록조회 (작성일자 2025-01-01 ~ 2025-12-31) · 대표 품목"], "head": ["작성일자", "승인번호", "발급일자", "전송일자", "공급자사업자등록번호", "종사업장번호", "상호", "대표자명", "주소", "공급받는자사업자등록번호", "종사업장번호", "상호", "대표자명", "주소", "합계금액", "공급가액", "세액", "전자세금계산서분류", "전자세금계산서종류", "발급유형", "비고", "영수/청구 구분", "공급자 이메일", "공급받는자 이메일1", "공급받는자 이메일2", "품목일자", "품목명", "품목규격", "품목수량", "품목단가", "품목공급가액", "품목세액", "품목비고"], "rows": [["2025-01-02", "20250102-41000001-9a632e10", "2025-01-02", "2025-01-03", "123-81-45678", "", "샘플제조(주)", "박정민", "경기도 안산시 단원구 가상산업로 100", "507-88-60082", "", "(주)다온시스템", "이서연", "경기도 시흥시 가상로 73", "20,693,750", "18,812,500", "1,881,250", "세금계산서", "일반", "정발급", "", "청구", "tax@sample-mfg.example", "acct112@customer.example", "", "2025-01-02", "기어세트 외 1건", "G-12", "158", "87,500", "13,825,000", "1,382,500", ""], ["2025-01-03", "20250103-41000001-8e4030cc", "2025-01-03", "2025-01-06", "123-81-45678", "", "샘플제조(주)", "박정민", "경기도 안산시 단원구 가상산업로 100", "507-88-60082", "", "(주)다온시스템", "이서연", "경기도 시흥시 가상로 73", "97,133,080", "88,302,800", "8,830,280", "세금계산서", "일반", "정발급", "", "청구", "tax@sample-mfg.example", "acct112@customer.example", "", "2025-01-03", "금형부품 외 1건", "M-07", "677", "126,000", "85,302,000", "8,530,200", ""], ["2025-01-03", "20250103-41000002-2b1d7d5b", "2025-01-03", "2025-01-06", "123-81-45678", "", "샘플제조(주)", "박정민", "경기도 안산시 단원구 가상산업로 100", "558-81-89371", "", "(주)에이스정공", "정하늘", "충청남도 아산시 가상로 16", "8,850,600", "8,046,000", "804,600", "세금계산서", "일반", "정발급", "", "청구", "tax@sample-mfg.example", "acct135@customer.example", "", "2025-01-03", "샤프트", "S-30", "180", "44,700", "8,046,000", "804,600", ""], ["2025-01-06", "20250106-41000001-97e41ab2", "2025-01-06", "2025-01-07", "123-81-45678", "", "샘플제조(주)", "박정민", "경기도 안산시 단원구 가상산업로 100", "521-87-29884", "", "케이원텍(주)", "최유진", "인천광역시 남동구 가상로 104", "26,818,550", "24,380,500", "2,438,050", "세금계산서", "일반", "정발급", "", "청구", "tax@sample-mfg.example", "acct134@customer.example", "", "2025-01-06", "정밀가공부품 외 1건", "A-100", "353", "18,500", "6,530,500", "653,050", ""]], "total_rows": 434}, "bank": {"meta": ["거래내역조회", "계좌번호 : 123456-01-987654 (기업자유예금)", "예금주명 : 샘플제조(주)", "조회기간 : 2025.01.01 ~ 2026.02.28"], "head": ["거래일시", "적요", "기재내용", "찾으신금액", "맡기신금액", "잔액", "거래점"], "rows": [["2025.01.10 10:38:52", "CMS공동", "국민건강보험공단", "19,000,000", "0", "1,231,000,000", "안산중앙"], ["2025.01.13 11:47:59", "타행이체", "케이원텍주식회사", "0", "32,115,000", "1,263,115,000", "인터넷"], ["2025.01.13 14:58:28", "타행이체", "주)백산엔지니어링", "0", "29,973,000", "1,293,088,000", "인터넷"], ["2025.01.14 09:04:13", "타행이체", "(주)보람테크", "0", "61,564,000", "1,354,652,000", "인터넷"], ["2025.01.14 14:26:53", "타행이체", "(주)한울산업", "0", "30,306,000", "1,384,958,000", "인터넷"], ["2025.01.16 11:47:02", "타행이체", "에이스정공(주)", "0", "28,655,000", "1,413,613,000", "인터넷"]], "total_rows": 643}, "vatret": {"meta": ["부가가치세 신고서 과세표준 및 매출세액 요약 (2025년, 회사 신고분 전기)"], "head": ["신고구분", "과세기간", "과세 세금계산서 발급분 금액", "세액", "과세 기타 금액", "영세율 금액", "합계 금액"], "rows": [["1기 예정", "2025.01.01~2025.03.31", "3,031,734,800", "303,173,480", "0", "0", "3,031,734,800"], ["1기 확정", "2025.04.01~2025.06.30", "2,377,473,200", "237,747,320", "0", "0", "2,377,473,200"], ["2기 예정", "2025.07.01~2025.09.30", "2,114,036,000", "211,403,600", "0", "0", "2,114,036,000"], ["2기 확정", "2025.10.01~2025.12.31", "2,528,078,900", "252,807,890", "0", "0", "2,528,078,900"]], "total_rows": 4}}, "files": ["/Users/yohanchoi/Documents/project/auditLab/poc/data/company/01_합계잔액시산표_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/02_분개장_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/03_분개장_2026_1-2월.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/04_계정별원장_외상매출금_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/05_거래처원장_외상매출금_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/06_거래처등록현황.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/07_매출전자세금계산서목록_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/08_매출전자세금계산서목록_2026_1-2월.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/09_은행거래내역_KB국민_보통예금.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/data/company/10_부가가치세신고서_과세표준요약_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/output/as-is/As-Is_조서_샘플제조_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/output/to-be/K-Tieout_결과_샘플제조_2025.xlsx", "/Users/yohanchoi/Documents/project/auditLab/poc/output/비교_As-Is_vs_K-Tieout.xlsx"]};
+const $ = s => document.querySelector(s);
+const won = n => (n < 0 ? "−" : "") + Math.abs(Math.round(n)).toLocaleString("ko-KR");
+const pct = (a, b, d = 1) => (100 * a / b).toFixed(d) + "%";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const C = D.coverage;
+
+// ---------- 00 tiles
+const asisFound = D.asis_counts["발견"], asisMaybe = D.asis_counts["발견 가능"], asisSign = D.asis_counts["징후"];
+$("#h-pop").textContent = C.pop_n;
+$("#tiles").innerHTML = [
+  ["이상 거래 발견 (11건 중)", `<span class="from">${asisFound + asisMaybe}건</span><span class="arrow">→</span><span class="to">${D.tobe_counts["발견"]}건</span>`,
+   `지금 방식: 발견 ${asisFound}, 발견 가능 ${asisMaybe}, 징후만 ${asisSign}`],
+  ["매출 증빙 대조 범위 (금액)", `<span class="from">${pct(D.asis_coverage.vouch_amt, C.pop_amt)}</span><span class="arrow">→</span><span class="to">100%</span>`,
+   `표본 ${C.asis_vouch_n}건 → 전 건 ${C.pop_n}건`],
+  ["부가세 차이 원인 규명", `<span class="from">0원</span><span class="arrow">→</span><span class="to">${(D.asis_vat_diff/1e6).toFixed(1)}백만</span>`,
+   `연간 차이 ${won(D.asis_vat_diff)}원을 거래 ${D.vat.items.length}건으로 분해`],
+  ["K-Tieout 오탐", `<span class="to">${D.false_positives.length}건</span>`, `검토 목록 ${D.exceptions.length}건 전부 정답지와 일치 (더미 데이터 기준)`],
+].map(([t, v, s]) => `<div class="tile"><span class="t">${t}</span><span class="v">${v}</span><span class="s">${s}</span></div>`).join("");
+
+// ---------- 01 tri table
+const tri = [
+  ["O","O","O","정상. 3방향 일치","전체 매출 " + C.pop_n + "건 중 " + C.tobe_3way_n + "건"],
+  ["O","X","X","가공매출 의심 (실재성)","A1 소망유통: 기말 직전 신규 거래처, 증빙·입금 모두 없음"],
+  ["O","X","O","세금계산서 미발행 (세무 위험)","A2 가람전기: 매출·입금은 있는데 세금계산서 없음"],
+  ["X","O","O","매출 누락 (완전성)","A3 서해정밀: 입금을 가수금으로 처리, 매출 미계상"],
+  ["O","O","X","미회수. 오래되면 회수 가능성 의문 (평가)","A11 미래산업: 3월·5월 청구분 미입금"],
+  ["O ≠ O","금액·일자 다름","—","정확성·기간귀속 문제","A4 금액 전치, A6·A7 연도 경계 귀속 오류"],
+];
+$("#tri").innerHTML = tri.map(r => `<tr><td class="mark ${r[0].startsWith("O")?"o":"x"}">${r[0]}</td><td class="mark ${r[1]==="O"?"o":"x"}">${r[1]}</td><td class="mark ${r[2]==="O"?"o":r[2]==="—"?"":"x"}">${r[2]}</td><td>${r[3]}</td><td class="muted">${r[4]}</td></tr>`).join("");
+
+// ---------- 02 docs
+const DOCS = [
+  {k:"tb", name:"합계잔액시산표", src:"더존 Smart A 등 ERP", who:"회사 재무팀", use:"4000C-1 총괄표의 출발점. 모든 조서 금액을 여기와 대사(PTB)", conf:["추정","b-mid"], note:"차변(잔액·합계) | 계정과목 | 대변(합계·잔액) 배치"},
+  {k:"journal", name:"분개장", src:"ERP 내보내기", who:"회사 재무팀", use:"모집단. 매출 전표 전 건을 여기서 뽑음. 분개 테스트의 원천", conf:["추정","b-mid"], note:"전표 한 장이 여러 행(차변·대변)"},
+  {k:"ledger", name:"계정별원장 (외상매출금)", src:"ERP", who:"회사 재무팀", use:"채권 증감 흐름 확인. 날짜가 MM-DD, 월계·누계 행이 섞여 있어 정규화가 필요", conf:["추정","b-mid"], note:"[전기이월]·[월계]·[누계] 행 포함"},
+  {k:"subledger", name:"거래처원장 (잔액)", src:"ERP", who:"회사 재무팀", use:"4000C-2 명세대사, 5050 조회 대상 선정의 모집단", conf:["추정","b-mid"], note:"거래처별 전기이월·차변·대변·잔액"},
+  {k:"hometax", name:"홈택스 매출 전자세금계산서 목록", src:"홈택스 목록조회 → 내려받기", who:"회사가 내려받아 제출", use:"4000P-2 부가세대사, 4000P-10 증빙 대조, K-Tieout 핵심 입력", conf:["실측 기록 기준","b-hi"], note:"1행 회사정보 · 3행 총계 · 5행 제목 띠 · 6행 머리글 33열 · 품목 시트 별도"},
+  {k:"bank", name:"은행 거래내역 (KB국민 형식)", src:"인터넷뱅킹 거래내역조회 → 엑셀저장", who:"회사 자금팀", use:"입금 확인(제3자 증거). 입금자명이 잘리거나 표기가 달라 대조가 가장 번거로운 자료", conf:["공개 파서 기준","b-hi"], note:"상단 계좌·기간 블록 뒤 머리글. 은행마다 열 이름이 다름"},
+  {k:"vatret", name:"부가가치세 신고서 (과세표준 요약)", src:"신고서 PDF를 옮겨 적음", who:"회사 세무 담당", use:"4000P-2에서 장부 매출과 분기별 비교", conf:["단순화","b-gray"], note:"실제 신고서는 PDF 서식. 여기선 숫자만 표로"},
+];
+function renderDoc(i){
+  document.querySelectorAll("#doctabs .tab").forEach((b, j) => b.setAttribute("aria-selected", j === i));
+  const d = DOCS[i], p = D.previews[d.k];
+  const meta = p.meta.map(m => `<tr class="meta"><td colspan="${p.head.length}">${esc(m)}</td></tr>`).join("");
+  $("#docpanel").innerHTML = `
+    <div class="sheet-head"><h3>${d.name}</h3><span class="badge ${d.conf[1]}">형식 근거: ${d.conf[0]}</span></div>
+    <div class="docmeta" style="margin-bottom:14px">
+      <div><span class="k">어디서 나오나</span>${d.src}</div>
+      <div><span class="k">누가 만드나</span>${d.who}</div>
+      <div><span class="k">회계사가 쓰는 곳</span>${d.use}</div>
+      <div><span class="k">파일 구조</span>${d.note}</div>
+    </div>
+    <div class="tbl"><table class="xl"><tbody>${meta}</tbody><thead><tr>${p.head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+    <tbody>${p.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="small muted" style="margin-top:8px">앞부분만 표시 · 전체 ${p.total_rows.toLocaleString("ko-KR")}행</p>`;
+}
+$("#doctabs").innerHTML = DOCS.map((d, i) => `<button class="tab" role="tab" id="tab-${d.k}" aria-selected="false">${d.name.replace(/ \(.+\)/, "")}</button>`).join("");
+document.querySelectorAll("#doctabs .tab").forEach((b, i) => b.addEventListener("click", () => renderDoc(i)));
+renderDoc(4);
+
+// ---------- 03 workpapers
+const AC = D.asis_coverage, F = D.asis_findings;
+const confDiff = D.confirm.filter(c => c.diff), confNo = D.confirm.filter(c => c.reply === null);
+const vouchSign = F.filter(f => f.proc === "4000P-10");
+const cutHit = F.filter(f => f.proc === "4000P-5");
+const WPS = [
+  {no:"4000C-1", name:"총괄표및Recap-매출채권", what:"매출채권 잔액이 시산표·전기 감사보고서와 맞는지", how:"시산표 금액을 옮기고 전기 조서와 비교, Tick-Mark(PY, PTB) 표시",
+   fields:"계정과목 · 전기말(감사후) · 당기말 회사제시 · 수정분개 · 당기말 감사후 · 증감 · Ref. · Tick-Mark", res:["ok", `외상매출금 ${won(AC.ar)}원, 시산표와 일치`]},
+  {no:"4000C-2", name:"계정내역,명세대사", what:"거래처원장 합계가 장부 잔액과 같은지", how:"거래처원장 행을 옮겨 합계 검증(F)과 시산표 대사(PTB)",
+   fields:"계정 · 거래처 · 기초금액 · 증가 · 감소 · 기말잔액 · Tick-Mark · 검토 No · 비고", res:["ok", "합계 일치. 거래처별 잔액이 맞는지는 이 조서로 알 수 없음"]},
+  {no:"5050", name:"채권채무조회 표본샘플링", what:"어느 거래처에 조회서를 보낼지", how:`잔액 큰 거래처부터 금액추출율 70%까지 선택`,
+   fields:"계정 · 거래처 · 기초금액 · 차변금액 · 대변금액 · 기말잔액 · 통화 · 외화잔액 · 선택 / 금액추출율 · 표본수추출율", res:["ok", `${AC.conf_n}개 거래처, 잔액의 ${pct(AC.conf_amt, AC.ar)}`]},
+  {no:"5051 · 4000C-3", name:"채권채무조회서 · 조회서대사", what:"거래처가 직접 회신한 잔액이 장부와 같은지 (외부 증거)", how:"전자조회 발송 → 회신 금액을 장부와 대사 → 차이는 회사에 소명 요청",
+   fields:"거래처 · 계정 · 기말잔액 · 조회서 No · 조회금액 · 차이 · 회신여부 · Tick-Mark / 회신율", res:[confDiff.length ? "warn" : "ok", `회신 ${AC.conf_reply_n}곳, 차이 ${confDiff.length}곳 (${confDiff.map(c => c.name).join(", ")}). 원인은 회사 소명 대기`]},
+  {no:"4000P-2", name:"부가세대사표", what:"부가세 신고 매출과 장부 매출이 같은지", how:"분기별 신고서 과세표준과 손익계산서 매출 비교, 차이는 매출조정항목으로 설명",
+   fields:"공급가액 · 1/4~4/4분기 · 계 / 과세(계산서) · 영세율 · 면세 · 가산(차감) 매출조정항목 · 손익계산서 매출액 · 차이", res:["bad", `연간 차이 ${won(D.asis_vat_diff)}원 (수행중요성의 ${pct(Math.abs(D.asis_vat_diff), 37500000, 0)}). 결론 보류`]},
+  {no:"4000P-5", name:"매출Cut-off", what:"결산일 전후 매출이 맞는 연도에 들어갔는지", how:"12/24~1/9 사이 1천만원 이상 전표만 골라 출고증 출고일과 비교",
+   fields:"No. · 전표일 · 전표번호 · 내역 · 거래처 · 품목 · 수량 · 금액 · 첨부증빙 · 증빙일(원시출고증빙) · 회계기간 일치여부", res:[cutHit.length ? "bad" : "ok", `${AC.cutoff_n}건 검토, 불일치 ${cutHit.length}건 (${cutHit.map(f => f.cust_name).join(", ")})`]},
+  {no:"4000P-10", name:"거래내역-증빙 검토", what:"장부 매출이 실제 거래인지 (세금계산서·출고증·입금)", how:`MUS로 ${AC.vouch_n}건 추출, 건마다 증빙 3종을 받아 대조`,
+   fields:"No. · 전표일 · 전표번호 · 거래처 · 금액 · 승인번호 · 작성일 · 세금계산서 금액 · 출고일 · 입금일 · 입금액 · 일치여부 · Tick-Mark", res:["warn", `${AC.vouch_n}건 (금액의 ${pct(AC.vouch_amt, AC.pop_amt)}). 이상 거래는 없었고 ${vouchSign.length}건은 분할·합산 입금이라 통장에서 바로 안 찾아져 추가 확인`]},
+];
+$("#wps").innerHTML = WPS.map(w => `<article class="sheet wp">
+  <div class="sheet-head" style="margin-bottom:4px"><h3>${w.name}</h3><span class="wpno">${w.no}</span></div>
+  <dl><dt>확인 대상</dt><dd>${w.what}</dd><dt>지금 방식</dt><dd>${w.how}</dd></dl>
+  <p class="fields">${w.fields}</p>
+  <p class="result ${w.res[0]}">${w.res[1]}</p></article>`).join("");
+
+// ---------- 04 compare
+$("#interval").textContent = won(D.mus_interval);
+const RES = {"발견":"r-found","발견 가능":"r-found","징후":"r-sign","미발견":"r-miss"};
+function renderCmp(f){
+  const rows = D.anomalies.filter(a => f === "all" || (f === "miss" && a.asis === "미발견") || (f === "sign" && a.asis === "징후"));
+  $("#cmp").innerHTML = rows.map(a => `<tr>
+    <td class="nw mono">${a.id}</td>
+    <td><b>${esc(a.type)}</b><br><span class="muted">${esc(a.desc)}</span></td>
+    <td class="nw">${esc(a.assertion)}</td>
+    <td class="r">${won(a.amount)}</td>
+    <td><span class="res ${RES[a.asis]}">${a.asis}</span> <span class="mono small muted">${a.asis_proc}</span><br><span class="small muted">${esc(a.asis_why)}${a.mus_prob != null ? ` · 표본에 뽑힐 확률 ${(a.mus_prob*100).toFixed(1)}%` : ""}</span></td>
+    <td><span class="res ${RES[a.tobe]}">${a.tobe}</span> <span class="mono small muted">${a.tobe_no}</span></td></tr>`).join("");
+}
+document.querySelectorAll("#chips .chip").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#chips .chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderCmp(b.dataset.f);
+}));
+renderCmp("all");
+$("#fp").textContent = `K-Tieout 오탐(정답지에 없는 검토 항목): ${D.false_positives.length}건. 지금 방식에서 '징후'는 차이가 있다는 것까지는 보였지만 원인을 모르는 상태를 뜻합니다.`;
+const RISK = {"매우 높음":"b-pen","높음":"b-pen","중간":"b-mid"};
+$("#exlist").innerHTML = D.exceptions.map(x => `<tr><td class="mono nw">${x.no}</td><td>${esc(x.kind)}</td><td><span class="badge ${RISK[x.risk]}">${x.risk}</span></td><td class="nw">${esc(x.cust_name)}</td><td class="r">${won(x.amount)}</td><td class="small">${esc(x.detail)}</td><td class="small muted">${esc(x.action)}</td></tr>`).join("");
+
+// ---------- 05 coverage
+const cov = [
+  ["지금 · 건수", C.asis_vouch_n, C.pop_n, `${C.asis_vouch_n} / ${C.pop_n}건`, false],
+  ["K-Tieout · 건수", C.pop_n, C.pop_n, `${C.pop_n} / ${C.pop_n}건`, true],
+  ["지금 · 금액", D.asis_coverage.vouch_amt, C.pop_amt, pct(D.asis_coverage.vouch_amt, C.pop_amt), false],
+  ["K-Tieout · 3방향 일치", C.tobe_3way_amt, C.pop_amt, pct(C.tobe_3way_amt, C.pop_amt), true],
+  ["지금 · Cut-off", C.asis_cutoff_n, C.tobe_cutoff_n, `${C.asis_cutoff_n}건`, false],
+  ["K-Tieout · Cut-off", C.tobe_cutoff_n, C.tobe_cutoff_n, `${C.tobe_cutoff_n}건 (전후 한 달)`, true],
+];
+$("#covbars").innerHTML = cov.map(([l, a, b, t, pen]) => `<div class="bar"><span>${l}</span><div class="track"><div class="fill ${pen ? "pen" : ""}" style="width:${(100*a/b).toFixed(2)}%"></div></div><span class="val">${t}</span></div>`).join("")
+  + `<p class="small muted">3방향 일치에서 빠진 금액은 검토 목록, 기말 현재 미입금(정상 만기 전) 채권, 추정 배분 건입니다.</p>`;
+$("#rules").innerHTML = Object.entries(D.rules).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="r">${v.toLocaleString("ko-KR")}</td></tr>`).join("");
+
+// ---------- 05 vat decomposition (shared scale)
+const VATX = D.vat.items;
+const vitems = VATX;
+const vtot = D.asis_vat_diff, vsum = vitems.reduce((s, x) => s + x.v, 0);
+const pos = vitems.reduce((s, x) => s + Math.max(0, x.v), 0), neg = vitems.reduce((s, x) => s + Math.min(0, x.v), 0);
+const extent = Math.abs(neg) + Math.max(pos, vtot);   // 막대 하나의 최대 길이 기준이 아니라 양·음 합계 범위를 한 축으로
+const zero = 100 * Math.abs(neg) / extent;
+const scale = v => 100 * Math.abs(v) / extent;
+$("#vat-total").textContent = won(vtot);
+$("#vat-unexp").textContent = won(vtot - vsum);
+$("#vat").innerHTML = vitems.map(x => `<div class="vrow"><span>${esc(x.label)} <span class="mono small muted">${x.no}</span></span>
+  <div class="vtrack"><span class="axis" style="left:${zero}%"></span><span class="seg ${x.v >= 0 ? "pos" : "neg"}" style="left:${x.v >= 0 ? zero : zero - scale(x.v)}%;width:${scale(x.v)}%"></span></div>
+  <span class="val">${x.v > 0 ? "+" : ""}${won(x.v)}</span></div>`).join("")
+  + `<div class="vrow total"><span>합계 = 신고서 vs 장부 차이</span><div class="vtrack"><span class="axis" style="left:${zero}%"></span><span class="seg pos" style="left:${zero}%;width:${scale(vsum)}%"></span></div><span class="val">${won(vsum)}</span></div>`;
+
+// ---------- 05 confirmations
+$("#conf").innerHTML = D.confirm.map(c => {
+  const ex = c.explain.map(n => D.exceptions.find(x => x.no === n)).filter(Boolean);
+  return `<tr class="${c.diff ? "flag" : ""}"><td class="nw">${esc(c.name)}</td><td class="r">${won(c.ledger)}</td><td class="r">${c.reply === null ? "미회신" : won(c.reply)}</td><td class="r">${c.diff ? won(c.diff) : "0"}</td>
+  <td class="small">${c.diff ? "회사에 차이조정표 요청, 대기" : "일치"}</td>
+  <td class="small">${c.diff ? ex.map(x => `<span class="mono">${x.no}</span> ${esc(x.kind)}`).join("<br>") : '<span class="muted">—</span>'}</td></tr>`;
+}).join("");
+const notSel = D.exceptions.filter(x => ["원장 중복 계상 의심","원장O·세금계산서X·입금X","세금계산서O·원장X","기간귀속 (당기 과소)"].includes(x.kind) && !D.confirm.some(c => c.name === x.cust_name));
+$("#conf-extra").textContent = `조회 대상 10곳 밖에서 장부와 증빙이 어긋난 거래처도 있습니다: ${notSel.map(x => x.cust_name).join(", ")}. 지금 방식은 잔액 크기로만 조회 대상을 고르지만, 증빙기준 잔액 차이로 우선순위를 정할 수 있습니다.`;
+
+// ---------- 05 calculator
+const MIN_A = {"총괄표 작성 (시산표·전기조서 대사)":30, "명세 거래처 행 검토":1, "조회 대상 선정":30, "조회서 발송·회신 관리":10, "회신 금액 대사":5,
+  "조회 차이 원인 조사 (회사 소명 요청·대조)":90, "부가세대사 (분기 합계 작성)":20, "부가세 차이 원인 조사 (회사 소명 요청·대조)":240,
+  "Cut-off 증빙 대조 (출고증·세금계산서)":10, "증빙 대조 (세금계산서·출고증·통장 각 1건)":5};
+const MIN_B = {"자료 3종 업로드·실행":30, "조회서 발송·회신 관리 (외부조회는 그대로 필요)":10, "검토 필요 항목 확인 (건별 판단·회사 확인)":30,
+  "추정 배분·미배정 입금 확인":10, "자동 생성 조서 검토·서명":15};
+function calcTable(sel, eff, mins, prefix){
+  $(sel).innerHTML = Object.entries(eff).map(([k, n], i) => `<tr><td class="small">${esc(k)}</td><td class="r">${n}</td>
+    <td class="r"><input type="number" min="0" step="1" id="${prefix}-${i}" value="${mins[k] ?? 10}" aria-label="${esc(k)} 건당 분"></td><td class="r" id="${prefix}-t-${i}"></td></tr>`).join("");
+}
+calcTable("#calc-a", D.asis_effort, MIN_A, "ma");
+calcTable("#calc-b", D.tobe_effort, MIN_B, "mb");
+function recalc(){
+  const tot = (eff, prefix) => Object.values(eff).reduce((s, n, i) => {
+    const m = Math.max(0, +document.getElementById(`${prefix}-${i}`).value || 0);
+    document.getElementById(`${prefix}-t-${i}`).textContent = (n * m).toLocaleString("ko-KR");
+    return s + n * m;
+  }, 0);
+  const a = tot(D.asis_effort, "ma"), b = tot(D.tobe_effort, "mb");
+  $("#sum-a").textContent = `${a.toLocaleString("ko-KR")}분 (${(a/60).toFixed(1)}시간)`;
+  $("#sum-b").textContent = `${b.toLocaleString("ko-KR")}분 (${(b/60).toFixed(1)}시간)`;
+  $("#verdict").innerHTML = `<span>지금 방식 <b>${(a/60).toFixed(1)}h</b></span><span>K-Tieout <b>${(b/60).toFixed(1)}h</b></span><span class="muted">${a > 0 ? `차이 ${((a-b)/60).toFixed(1)}h (${pct(a-b, a, 0)})` : ""}</span>`;
+}
+document.querySelectorAll(".calc input").forEach(i => i.addEventListener("input", recalc));
+recalc();
+$("#v-asis-cov").textContent = pct(D.asis_coverage.vouch_amt, C.pop_amt);
+
+// ---------- 06 ideas
+const IDEAS = [
+  {tag:"A", name:"전수대사 엔진", st:["이 데모의 본체","b-pen"], top:true,
+   ev:[`원장 ${C.pop_n}건 · 세금계산서 ${C.invoices}건 · 입금 ${C.deposits}건을 규칙 ${Object.keys(D.rules).length}종으로 대사`, `심어 둔 11건 전부 발견, 지금 방식은 ${asisFound + asisMaybe}건`],
+   next:["실제 감사 1건 자료로 같은 실험 (파일럿)", "거래처명 표기·어음·선수금 규칙 추가"]},
+  {tag:"신규", name:"부가세대사 자동 분해", st:["MVP 첫 기능 후보","b-pen"], top:true,
+   ev:[`4000P-2의 연간 차이 ${won(D.asis_vat_diff)}원을 거래 ${VATX.length}건으로 원 단위 분해`, "모든 외감 법인이 하는 조서이고, 입력이 홈택스 목록과 원장 두 개뿐이라 가장 작게 시작 가능"],
+   next:["회계사 인터뷰에서 '부가세대사 차이 소명에 드는 시간' 질문", "엑셀 추가기능 형태로 4000P-2 칸을 바로 채우는 데모"]},
+  {tag:"B", name:"조회서 회신 대사", st:["A와 바로 연결","b-blue"],
+   ev:[`조회 차이 ${confDiff.length}곳이 회신 도착 즉시 원인과 연결 (${confDiff.map(c => c.name).join(", ")})`, `조회 대상 밖의 어긋난 거래처 ${notSel.length}곳을 증빙기준 잔액으로 찾아냄`],
+   next:["NICE 전자조회 회신 내려받기 파일 형식 확보", "조회 대상 선정에 '증빙 차이' 기준 추가"]},
+  {tag:"C", name:"ERP 원장 정규화 + 분개 테스트", st:["A의 전처리로 이미 들어감","b-blue"],
+   ev:["더존 형식의 MM-DD 날짜, 월계·누계 행, 거래처코드를 표준 형식으로 바꾼 것이 엔진의 첫 단계", "A3에서 입금이 가수금(257)으로 처리된 것을 상대계정으로 추적"],
+   next:["주말·결산 후 전표, 매출의 비정상 상대계정 탐지 추가", "더존 외 ERP(영림원, SAP B1) 형식 수집"]},
+  {tag:"신규", name:"후속기간 취소·반품 감시", st:["A8에서 발견","b-mid"],
+   ev:["12/26 대형 매출이 1/16 전액 반품된 건. Cut-off 표본은 출고 사실만 보고 '일치'로 통과", "홈택스 1~2월 목록만 추가로 받으면 수정세금계산서의 당초승인번호로 자동 연결"],
+   next:["밀어내기 매출 패턴(기말 직전 급증 → 기초 반품) 지표화"]},
+  {tag:"신규", name:"입금자 검증", st:["A9에서 발견","b-mid"],
+   ev:["매출처와 다른 명의로 2회 분할 입금된 건을 금액 합계로 연결", "특수관계자·우회 거래 단서. 지금 방식에는 입금자명을 대조하는 절차가 따로 없음"],
+   next:["특수관계자 목록(영구조서 150)과 입금자명 대조"]},
+  {tag:"F", name:"한국형 PBC 요청", st:["가볍게 포함","b-gray"],
+   ev:["이 데모의 입력 10개 파일 목록이 곧 매출 영역 PBC 목록", "홈택스·은행에서 무엇을 어떤 조건으로 내려받는지 회사 담당자 안내문으로 바로 쓸 수 있음"],
+   next:["회사 담당자용 내려받기 안내 화면"]},
+  {tag:"D · E", name:"실시내용 작성 · 보고서 숫자 대조", st:["이 데이터와 무관","b-gray"],
+   ev:["둘 다 시간 기록·감사보고서가 입력이라 이번 데모 데이터로는 검증 못 함"],
+   next:["A·B 이후 순위 재검토"]},
+];
+$("#idealist").innerHTML = IDEAS.map(i => `<article class="idea ${i.top ? "top" : ""}">
+  <div class="tag"><span class="mono small muted">${i.tag}</span><b>${i.name}</b><span class="badge ${i.st[1]}">${i.st[0]}</span></div>
+  <div><p class="k">이 데모에서 보인 근거</p><ul class="tight small">${i.ev.map(e => `<li>${esc(e)}</li>`).join("")}</ul></div>
+  <div><p class="k">다음 단계</p><ul class="tight small">${i.next.map(e => `<li>${esc(e)}</li>`).join("")}</ul></div></article>`).join("");
+
+// ---------- 07 files
+$("#files").innerHTML = D.files.map(f => `<span>${esc(f)}</span>`).join("");
+</script>
