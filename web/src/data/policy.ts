@@ -185,8 +185,8 @@ Object.assign(rules, {
   },
   linkTieoutToWorkpaper: {
     engagement: (_db: Db, engagementId: string) => engagementId,
-    log: (_db: Db, engagementId: string, file: string) => ({ action: '전수대사 결과 조서 연결', target: `${file} → E-61·E-22·E-21`, engagementId }),
-    success: '전수대사 결과를 매출(E-61)·Cut-off(E-22)·채권 조회(E-21) 조서의 근거로 연결했습니다.',
+    log: (_db: Db, engagementId: string, file: string) => ({ action: '전수대사 결과 조서 연결', target: `${file} → E-61·E-22·E-21·E-51`, engagementId }),
+    success: '전수대사 결과를 매출(E-61)·Cut-off(E-22)·채권 조회(E-21)·미기록부채(E-51) 조서의 근거로 연결했습니다.',
   },
 } satisfies Rules)
 

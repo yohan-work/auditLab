@@ -50,6 +50,15 @@ poc/.venv/bin/python web/scripts/convert_poc_inputs.py   # poc 엑셀 → input.
 cd web && node scripts/check-tieout.ts                    # 예외·부가세 분해·거래처별 채권이 poc와 일치하는지 대조
 ```
 
+- **엑셀 업로드**: `src/domain/tieout/parsers.ts`가 파일 이름이 아니라 내용(제목·머리글)으로 분개장, 홈택스 매출·매입 목록, 은행 거래내역, 거래처원장, 거래처등록, 부가세 신고서를 알아봅니다. 브라우저에서 SheetJS로 읽고 서버로 보내지 않습니다.
+- **매입 대사**: `src/domain/tieout/purchase.ts`. 원장(251) × 홈택스 매입 × 은행 출금으로 미기록 부채, 기간귀속, 중복 수취, 에누리 미반영, 후속기간 지급 전수 검토를 다룹니다.
+- 시연 엑셀은 `public/samples/`에 있습니다(01~10은 poc 가상 자료, 11~12 매입 목록은 `scripts/make_purchase_samples.py`로 생성).
+
+```bash
+cd web && node scripts/check-parsers.ts    # 엑셀 업로드 경로 = 변환 JSON, 엔진 결과 동일
+cd web && node scripts/check-purchase.ts   # 매입: 심어 둔 6건 발견, 오탐 0, 미설명 차이 0
+```
+
 - 엔진은 시연 자료에 맞춰 조정되어 있습니다. 실제 자료에서의 성능은 파일럿에서 측정합니다.
 
 ## 구조와 확장 경로

@@ -307,6 +307,7 @@ export interface TieoutRun {
   id: ID
   engagementId: ID
   dataset: string // 예: '샘플제조 2025 기말 자료'
+  source: 'sample' | 'upload'
   fiscalYear: number
   ranAt: string
   ranBy: ID

@@ -393,6 +393,7 @@ export const mockApi: AuditApi = {
       ['E-61', 'KT-05 전 건 대사표 · KT-01 검토 필요 목록'],
       ['E-22', '4000P-5 매출 Cut-off (자동 전수)'],
       ['E-21', '4000C-2 거래처별 채권 대사 (증빙 기준 잔액)'],
+      ['E-51', 'KP-01 매입 대사 · 후속기간 지급 전수 검토'],
     ]
     for (const [code, locator] of targets) {
       const node = get().workflow.find((n) => n.engagementId === engagementId && n.code === code)
