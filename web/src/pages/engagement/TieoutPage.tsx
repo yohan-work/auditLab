@@ -35,18 +35,20 @@ export function TieoutPage() {
   const data = useTieoutData((s) => (id ? s[id] : undefined))
   const [stage, setStage] = useState<number | null>(null)
   const [restoring, setRestoring] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const isSampleClient = e?.clientId === SAMPLE_CLIENT_ID
 
   // 시연 자료로 실행했던 업무는 새로고침 후 자료를 다시 불러온다(업로드 자료는 다시 올려야 함)
   useEffect(() => {
-    if (id && run?.source === 'sample' && !data && !restoring) {
+    // source가 없는 예전 기록은 시연 자료로 실행된 것이다
+    if (id && run && run.source !== 'upload' && !data && !restoring && !loadError) {
       setRestoring(true)
-      loadSampleDataset().then((d) => {
-        setTieoutData(id, d)
-        setRestoring(false)
-      })
+      loadSampleDataset()
+        .then((d) => setTieoutData(id, d))
+        .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : String(err)))
+        .finally(() => setRestoring(false))
     }
-  }, [id, run, data, restoring])
+  }, [id, run, data, restoring, loadError])
 
   const sales = useMemo(() => (run && data ? runTieout(data.input) : null), [run, data])
   const purchase = useMemo(() => (run && data?.purchase ? runPurchaseTieout(data.purchase) : null), [run, data])
@@ -102,6 +104,13 @@ export function TieoutPage() {
               {run.ranAt.slice(0, 10)}에 업로드 자료로 실행한 기록이 있습니다. 업로드 자료는 이 브라우저 메모리에만 있어 새로고침하면 사라집니다. 다시 올려 주세요.
             </p>
             <Sources onRun={start} locked={!!e.archivedDate} sample={isSampleClient} />
+          </div>
+        ) : loadError ? (
+          <div className="px-6 py-10">
+            <p className="mb-3 text-[13px] text-danger">시연 자료를 불러오지 못했습니다: {loadError}</p>
+            <Button icon={<RotateCcw size={15} />} onClick={() => setLoadError(null)}>
+              다시 시도
+            </Button>
           </div>
         ) : (
           <p className="px-6 py-10 text-muted">자료를 다시 불러오는 중…</p>
