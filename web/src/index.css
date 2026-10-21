@@ -1,7 +1,8 @@
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 
   --color-ink: #111827;
   --color-ink-2: #374151;
@@ -38,6 +39,8 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 14px;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
   -webkit-font-smoothing: antialiased;
 }
 .tabular { font-variant-numeric: tabular-nums; }
