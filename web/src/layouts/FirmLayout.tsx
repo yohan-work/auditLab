@@ -30,7 +30,7 @@ export function FirmLayout() {
             key={l.to}
             to={l.to}
             className={({ isActive }) =>
-              cx('flex h-9 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium', isActive ? 'bg-white/12 text-white' : 'text-white/75 hover:text-white')
+              cx('flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2 text-[13px] font-medium xl:px-3', isActive ? 'bg-white/12 text-white' : 'text-white/75 hover:text-white')
             }
           >
             {l.label}
@@ -41,12 +41,13 @@ export function FirmLayout() {
           </NavLink>
         ))}
         <div className="ml-auto flex items-center gap-1.5 text-white/85">
-          <span className="mr-2 text-xs text-white/60">{firm.name}</span>
+          <span className="mr-2 hidden text-xs text-white/60 xl:inline">{firm.name}</span>
           <Link
             to={`/portal/${PRIMARY_ENGAGEMENT_ID}`}
             className="mr-2 flex items-center gap-1 rounded-md border border-white/20 px-2.5 py-1 text-xs hover:bg-white/10"
           >
-            고객 포털 보기 <ExternalLink size={12} />
+            <span className="hidden lg:inline">고객 포털 보기</span>
+            <span className="lg:hidden">포털</span> <ExternalLink size={12} />
           </Link>
           <CalendarMenu dark />
           <SettingsMenu dark />

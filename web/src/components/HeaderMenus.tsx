@@ -25,6 +25,7 @@ import { api } from '@/data/api'
 import { useClients, useCurrentUser, useEngagements, useFirm, useIndependence, useToday, useUsers } from '@/data/hooks'
 import { helpLinks, releaseNotes, shortcuts } from '@/data/mock/settings'
 import { daysBetween, legalDeadlines } from '@/domain/rules'
+import { startTour } from '@/data/ui'
 import { cx } from '@/lib/format'
 
 // ---------------------------------------------------------------- 드롭다운 틀
@@ -265,6 +266,9 @@ export function HelpMenu({ dark, placement }: { dark?: boolean; placement?: Plac
               </button>
             ))}
             <div className="my-1 border-t border-line" />
+            <MenuItem icon={<Sparkles size={15} />} onClick={startTour}>
+              둘러보기 시작 (9단계)
+            </MenuItem>
             <MenuItem icon={<Keyboard size={15} />} hint={<ChevronRight size={14} />} onClick={() => setView('shortcuts')}>
               단축키
             </MenuItem>

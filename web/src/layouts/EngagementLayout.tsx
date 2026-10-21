@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link, useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { Inbox, LayoutGrid, Building2, ShieldCheck, BookOpen, Settings, ChevronDown } from 'lucide-react'
+import { Inbox, LayoutGrid, Building2, ShieldCheck, BookOpen, Settings, ChevronDown, FileSpreadsheet } from 'lucide-react'
+import { CloseOutControl } from '@/components/CloseOut'
 import { CalendarMenu, HelpMenu, UserMenu } from '@/components/HeaderMenus'
 import { EngagementSettingsModal } from '@/components/EngagementSettings'
 import { Logo } from '@/components/Logo'
@@ -52,6 +53,13 @@ export function EngagementLayout() {
           </Link>
         ))}
         <CalendarMenu placement="right" />
+        <NavLink
+          to={`/engagements/${e.id}/addin`}
+          title="엑셀 애드인 미리보기"
+          className={({ isActive }) => cx('flex h-10 w-10 items-center justify-center rounded-md hover:bg-canvas', isActive ? 'bg-[#eef0f3] text-[#217346]' : 'text-ink-2')}
+        >
+          <FileSpreadsheet size={19} strokeWidth={1.7} />
+        </NavLink>
         <div className="mt-auto flex flex-col items-center gap-1">
           <HelpMenu placement="top-right" />
           <UserMenu placement="top-right" />
@@ -68,7 +76,7 @@ export function EngagementLayout() {
                 to={t.path === '' ? `/engagements/${e.id}` : `/engagements/${e.id}/${t.path}`}
                 className={({ isActive }) =>
                   cx(
-                    'flex h-9 shrink-0 items-center gap-1 rounded-md px-3 text-[14px] whitespace-nowrap',
+                    'flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-[13px] whitespace-nowrap 2xl:px-3 2xl:text-[14px]',
                     isActive ? 'bg-[#eef0f3] font-medium text-ink' : 'text-ink-2 hover:bg-canvas',
                   )
                 }
@@ -78,7 +86,8 @@ export function EngagementLayout() {
               </NavLink>
             ))}
           </nav>
-          <div className="flex shrink-0 items-center gap-3 pl-3">
+          <div className="flex shrink-0 items-center gap-2.5 pl-3">
+            <CloseOutControl engagement={e} />
             <button
               onClick={() => setSettingsOpen(true)}
               title="감사 업무 설정"
@@ -88,7 +97,7 @@ export function EngagementLayout() {
               <Settings size={18} />
             </button>
             <StatusPill status={e.status} />
-            <span className="text-[15px] font-semibold text-ink">{e.name}</span>
+            <span className="hidden text-[15px] font-semibold text-ink xl:inline">{e.name}</span>
             <label className="relative flex cursor-pointer items-center gap-1 text-[15px] text-muted">
               {client?.name}
               <ChevronDown size={16} />

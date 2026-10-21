@@ -16,16 +16,9 @@ import {
   useUsers,
 } from '@/data/hooks'
 import type { Integration, Role } from '@/domain/types'
+import { permissionMatrix, roleLabel } from '@/domain/permissions'
 import { cx } from '@/lib/format'
 
-const roleLabel: Record<Role, string> = {
-  partner: '업무수행이사',
-  manager: '책임자',
-  senior: '현장책임',
-  staff: '담당',
-  eqr: '심리(업무품질검토)',
-  client: '고객사',
-}
 
 const tabs = [
   { key: 'profile', label: '내 프로필', icon: UserRound },
@@ -217,16 +210,6 @@ function GeneralTab() {
 
 // ---------------------------------------------------------------- 구성원·권한
 
-const permissions: [string, Role[]][] = [
-  ['감사 업무 생성·설정', ['partner', 'manager']],
-  ['조서 작성 서명', ['partner', 'manager', 'senior', 'staff']],
-  ['조서 검토 서명', ['partner', 'manager']],
-  ['심리 서명', ['eqr']],
-  ['감사시간 승인', ['partner', 'manager']],
-  ['고객 자료 승인·반려', ['partner', 'manager', 'senior']],
-  ['조서 최종 취합(잠금)', ['partner']],
-]
-
 function TeamTab() {
   const users = useUsers().filter((u) => u.role !== 'client')
   const clientsUsers = useUsers().filter((u) => u.role === 'client')
@@ -278,7 +261,7 @@ function TeamTab() {
             </tr>
           </thead>
           <tbody>
-            {permissions.map(([label, allowed]) => (
+            {permissionMatrix.map(({ label, roles: allowed }) => (
               <tr key={label}>
                 <Td className="pl-0">{label}</Td>
                 {roles.map((r) => (
@@ -290,7 +273,7 @@ function TeamTab() {
             ))}
           </tbody>
         </table>
-        <p className="mt-3 text-xs text-muted">심리 회계사는 해당 업무의 업무수행이사를 겸할 수 없습니다(품질관리기준서 2). 시연에서는 권한을 강제하지 않습니다.</p>
+        <p className="mt-3 text-xs text-muted">심리 회계사는 해당 업무의 업무수행이사를 겸할 수 없습니다(품질관리기준서 2). 본인이 작성한 조서는 본인이 검토 서명할 수 없습니다. 내 계정 → 사용자 전환으로 역할별 차이를 확인해 보세요.</p>
       </Card>
       <Card title={`고객사 사용자 (${clientsUsers.length})`}>
         <ul className="divide-y divide-line-2">
@@ -424,7 +407,7 @@ function SecurityTab() {
         </ul>
         <p className="mt-2 text-xs text-muted">금감원은 AI 활용 시 감사정보 외부 유출 방지를 당부했습니다(2026-06). 외부 AI는 법인이 켜야만 사용됩니다.</p>
       </Card>
-      <Card title={<span className="flex items-center gap-2"><Clock size={15} className="text-muted" />접근 기록</span>}>
+      <Card title={<span className="flex items-center gap-2"><Clock size={15} className="text-muted" />접근·활동 기록 (자동 기록)</span>}>
         <table className="w-full">
           <thead>
             <tr>

@@ -268,6 +268,7 @@ function CreateEngagementModal({ open, onClose }: { open: boolean; onClose: () =
       teamIds: teamIds.filter((t) => t !== leadId),
       agmDate: agmDate || undefined,
     })
+    if (!id) return // 권한 없음 등으로 거부됨(토스트로 안내)
     onClose()
     navigate(`/engagements/${id}`)
   }

@@ -44,6 +44,7 @@ export function ConfirmationsPage() {
     setBusy(ch)
     const n = await api.importConfirmations(id, ch)
     setBusy(null)
+    if (n === undefined) return // 잠금 등으로 거부됨(토스트로 안내)
     setMsg(
       n > 0
         ? `${ch === 'kftc' ? '금융결제원' : 'NICE'} 회신 ${n}건을 가져왔습니다.`

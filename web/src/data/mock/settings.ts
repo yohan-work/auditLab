@@ -24,10 +24,10 @@ export const notificationPrefs: NotificationPref[] = [
 export const accessLog: AccessLogEntry[] = [
   { id: 'al-1', at: '2026-10-21 09:02', userId: 'u-park', action: '로그인', target: '웹', ip: '211.0.0.12' },
   { id: 'al-2', at: '2026-10-21 08:55', userId: 'u-lee', action: '문서 다운로드', target: '채권채무조회_회신리포트_NICE.xlsx', ip: '211.0.0.14' },
-  { id: 'al-3', at: '2026-10-20 17:31', userId: 'u-kim', action: '서명', target: 'P-23 부정위험 평가 · 검토자', ip: '211.0.0.10' },
-  { id: 'al-4', at: '2026-10-19 16:40', userId: 'c-han', action: '파일 업로드', target: '매출전자세금계산서목록_2026_1-9월.xlsx', ip: '121.0.0.77' },
-  { id: 'al-5', at: '2026-10-18 09:20', userId: 'u-kim', action: '리뷰 노트 작성', target: 'P-24 계획단계 분석적 검토', ip: '211.0.0.10' },
-  { id: 'al-6', at: '2026-10-16 11:05', userId: 'u-choi', action: '문서 업로드', target: 'Alphalyzer_JET_결과_2026_1-9월.xlsx', ip: '211.0.0.15' },
+  { id: 'al-3', at: '2026-10-20 17:31', userId: 'u-kim', action: '서명', target: 'P-23 부정위험 평가 및 경영진 질문 · 검토 서명', ip: '211.0.0.10', engagementId: 'e-sample-2026' },
+  { id: 'al-4', at: '2026-10-19 16:40', userId: 'c-han', action: '파일 업로드', target: '매출전자세금계산서목록_2026_1-9월.xlsx', ip: '121.0.0.77', engagementId: 'e-sample-2026' },
+  { id: 'al-5', at: '2026-10-18 09:20', userId: 'u-kim', action: '리뷰 노트 작성', target: 'P-24 계획단계 분석적 검토', ip: '211.0.0.10', engagementId: 'e-sample-2026' },
+  { id: 'al-6', at: '2026-10-16 11:05', userId: 'u-choi', action: '문서 업로드', target: 'Alphalyzer_JET_결과_2026_1-9월.xlsx', ip: '211.0.0.15', engagementId: 'e-sample-2026' },
 ]
 
 export const helpLinks = [

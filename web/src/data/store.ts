@@ -1,6 +1,7 @@
 // 시연용 인메모리 저장소. 화면은 이 파일을 직접 쓰지 않고 api.ts와 hooks.ts를 거친다.
 // 실제 백엔드로 바꿀 때는 api.ts의 구현만 HTTP 호출로 교체하면 된다.
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import * as seed from './mock/seed'
 import * as settingsSeed from './mock/settings'
 import type {
@@ -76,7 +77,16 @@ function initialState(): DbState {
   }
 }
 
-export const useDb = create<DbState>(() => initialState())
+// 클릭으로 바꾼 상태를 브라우저에 저장해 새로고침 후에도 이어서 시연할 수 있게 한다.
+// 시드 구조가 바뀌면 version을 올려 예전 저장본을 버린다.
+export const useDb = create<DbState>()(
+  persist(() => initialState(), {
+    name: 'auditlab-demo',
+    version: 2,
+    storage: createJSONStorage(() => localStorage),
+    migrate: () => initialState(),
+  }),
+)
 
 export const resetDb = () => useDb.setState(initialState(), true)
 

@@ -57,6 +57,7 @@ export interface AccessLogEntry {
   action: string
   target: string
   ip: string
+  engagementId?: ID
 }
 
 export interface Client {

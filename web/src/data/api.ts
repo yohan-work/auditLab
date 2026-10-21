@@ -1,6 +1,7 @@
 // 쓰기 작업의 계약(interface)과 시연용 구현.
 // 실제 서비스에서는 같은 interface를 HTTP 클라이언트로 구현해 교체한다(예: httpApi).
 import { useDb, newId, nowIso } from './store'
+import { withPolicy } from './policy'
 import type {
   AuditRequest,
   ConfirmationChannel,
@@ -21,6 +22,9 @@ export interface AuditApi {
   setNotificationPref(id: string, channel: 'inApp' | 'email', value: boolean): Promise<void>
   createEngagement(input: Pick<Engagement, 'clientId' | 'name' | 'type' | 'fiscalYear' | 'leadId' | 'teamIds' | 'agmDate'>): Promise<string>
   updateEngagement(id: string, patch: Partial<Engagement>): Promise<void>
+  /** 조서 최종 취합: 이후 해당 업무의 조서·요청·시간 기록은 수정할 수 없다. */
+  archiveEngagement(id: string): Promise<void>
+  logActivity(entry: { action: string; target: string; engagementId?: string }): Promise<void>
 
   createRequest(input: Pick<AuditRequest, 'engagementId' | 'title' | 'category' | 'dueDate' | 'description'>): Promise<string>
   setRequestStatus(id: string, status: RequestStatus): Promise<void>
@@ -110,6 +114,20 @@ export const mockApi: AuditApi = {
     return ok()
   },
 
+  archiveEngagement(id) {
+    set((s) => ({
+      engagements: s.engagements.map((e) => (e.id === id ? { ...e, archivedDate: s.today, status: 'archived' } : e)),
+    }))
+    return ok()
+  },
+
+  logActivity(entry) {
+    set((s) => ({
+      accessLog: [{ id: newId('al'), at: nowIso().replace('T', ' '), userId: s.currentUserId, ip: '211.0.0.12', ...entry }, ...s.accessLog],
+    }))
+    return ok()
+  },
+
   createRequest(input) {
     const id = newId('r')
     set((s) => {
@@ -164,12 +182,9 @@ export const mockApi: AuditApi = {
   },
 
   signOff(nodeId, role) {
-    // 시연: 심리 서명은 지정된 업무품질검토자 명의로 기록한다(실제로는 해당 사용자 로그인 후 서명).
-    const node = get().workflow.find((n) => n.id === nodeId)
-    const eqrId = get().engagements.find((e) => e.id === node?.engagementId)?.eqrId
     patchNode(nodeId, (n) => {
       n.signOffs = n.signOffs.filter((s) => s.role !== role)
-      n.signOffs.push({ userId: role === 'eqr' ? (eqrId ?? me()) : me(), role, at: nowIso() })
+      n.signOffs.push({ userId: me(), role, at: nowIso() })
     })
     return ok()
   },
@@ -318,5 +333,6 @@ export const mockApi: AuditApi = {
   },
 }
 
-// 화면에서 쓰는 단일 진입점. 실제 백엔드 연결 시 이 줄만 바꾼다.
-export const api: AuditApi = mockApi
+// 화면에서 쓰는 단일 진입점. 권한·잠금 검사와 활동 이력은 withPolicy가 감싼다.
+// 실제 백엔드 연결 시 mockApi 자리에 httpApi를 넣는다.
+export const api: AuditApi = withPolicy(mockApi)

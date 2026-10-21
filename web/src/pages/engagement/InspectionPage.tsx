@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ActivityLog } from '@/components/ActivityLog'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowRight, FileDown, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { Button, DemoNote, KrTag, LevelBadge, Modal } from '@/components/ui'
@@ -126,6 +127,9 @@ export function InspectionPage() {
               </section>
             )
           })}
+        </div>
+        <div className="mt-5">
+          <ActivityLog engagementId={id} />
         </div>
       </div>
 
