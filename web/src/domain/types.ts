@@ -167,7 +167,7 @@ export interface ReviewNote {
   resolvedAt?: string
 }
 
-export type DocumentSource = 'client' | 'firm' | 'kftc' | 'nice' | 'alphalyzer' | 'dart'
+export type DocumentSource = 'client' | 'firm' | 'kftc' | 'nice' | 'alphalyzer' | 'dart' | 'tieout'
 
 export interface AuditDocument {
   id: ID
@@ -300,4 +300,26 @@ export interface InspectionFinding {
   basis: string // 근거(기준·감리 항목)
   engagementId?: ID
   link?: string
+}
+
+// 전수대사 실행 기록과 예외별 처리 상태. 결과 자체는 입력 자료로 언제든 다시 계산된다(결정론적).
+export interface TieoutRun {
+  id: ID
+  engagementId: ID
+  dataset: string // 예: '샘플제조 2025 기말 자료'
+  fiscalYear: number
+  ranAt: string
+  ranBy: ID
+  ms: number
+  exceptionCount: number
+}
+
+export interface TieoutDisposition {
+  engagementId: ID
+  exNo: string
+  status: 'requested' | 'concluded'
+  requestId?: ID
+  judgment?: string
+  by: ID
+  at: string
 }

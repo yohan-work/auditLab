@@ -15,6 +15,7 @@ const SOURCES: { key: DocumentSource; label: string; kr?: boolean; cls: string }
   { key: 'nice', label: 'NICE', kr: true, cls: 'bg-violet-50 text-violet-700' },
   { key: 'alphalyzer', label: 'Alphalyzer', kr: true, cls: 'bg-amber-50 text-amber-700' },
   { key: 'dart', label: 'DART', kr: true, cls: 'bg-blue-50 text-blue-700' },
+  { key: 'tieout', label: '전수대사', kr: true, cls: 'bg-emerald-50 text-emerald-700' },
 ]
 const sourceMeta = (k: DocumentSource) => SOURCES.find((s) => s.key === k)!
 

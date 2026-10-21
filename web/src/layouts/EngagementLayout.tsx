@@ -26,6 +26,7 @@ export const engagementTabs = [
   { path: 'requests', label: '자료 요청' },
   { path: 'documents', label: '문서' },
   { path: 'reporting', label: '재무제표' },
+  { path: 'tieout', label: '전수대사', kr: true },
   { path: 'confirmations', label: '외부조회', kr: true },
   { path: 'time', label: '감사시간', kr: true },
   { path: 'inspection', label: '감리 모의고사', kr: true },

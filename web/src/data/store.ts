@@ -20,6 +20,8 @@ import type {
   Integration,
   NotificationPref,
   Questionnaire,
+  TieoutDisposition,
+  TieoutRun,
   ReviewNote,
   TimeEntry,
   User,
@@ -48,6 +50,8 @@ export interface DbState {
   integrations: Integration[]
   notificationPrefs: NotificationPref[]
   accessLog: AccessLogEntry[]
+  tieoutRuns: TieoutRun[]
+  tieoutDispositions: TieoutDisposition[]
 }
 
 function initialState(): DbState {
@@ -74,6 +78,8 @@ function initialState(): DbState {
     integrations: clone(settingsSeed.integrations),
     notificationPrefs: clone(settingsSeed.notificationPrefs),
     accessLog: clone(settingsSeed.accessLog),
+    tieoutRuns: [],
+    tieoutDispositions: [],
   }
 }
 
@@ -82,7 +88,7 @@ function initialState(): DbState {
 export const useDb = create<DbState>()(
   persist(() => initialState(), {
     name: 'auditlab-demo',
-    version: 4,
+    version: 5,
     storage: createJSONStorage(() => localStorage),
     migrate: () => initialState(),
   }),

@@ -1,6 +1,6 @@
 # auditLab web — 감사 업무공간 프로토타입
 
-Fieldguide식 감사 업무공간에 한국 감사 실무 기능(KR 표시)을 더한 **흐름 이해용 프로토타입**입니다.
+감사 업무공간에 한국 감사 실무 기능(KR 표시)을 더한 **흐름 이해용 프로토타입**입니다.
 
 - 모든 데이터는 합성 데이터이고, 실제 회사·인물과 무관합니다.
 - 클릭하면 메모리 안의 상태가 바뀌어 흐름을 따라가 볼 수 있습니다.
@@ -32,11 +32,25 @@ npm run build
 | | `…/forms` · `…/questionnaires` | 수임·중요성·위험평가 서식, 고객 질문서 |
 | | `…/requests` | 자료 요청(PBC), 승인·반려, 댓글 |
 | | `…/documents` | 문서함(회사·감사팀·결제원·NICE·Alphalyzer·DART) |
+| | `…/tieout` **KR** | **매출 전수대사**: 원장 × 홈택스 전자세금계산서 × 은행 입금 3방향 대사, 예외 → 회사 확인 요청·판단 기록 → 조서 근거 |
 | | `…/reporting` | 재무제표 그리드, 연결 조서, 합계 검증, **DART 전기 대사 KR** |
 | | `…/confirmations` **KR** | 금융결제원·NICE 회신 가져오기, 대체절차 기록 |
 | | `…/time` **KR** | 감사시간 입력·승인, 표준감사시간, 3인 배분 |
 | | `…/inspection` **KR** | 감리 모의고사(감리 지적 상위 항목 자동 점검) |
 | 고객 | `/portal/:id` | 고객 포털(자료 제출, 질문서 답변) |
+
+## 매출 전수대사 엔진
+
+- `src/domain/tieout/engine.ts`: `poc/ktieout.py`를 옮긴 결정론적 규칙 엔진입니다. 외부 의존이 없어 브라우저와 서버에서 모두 돌아갑니다.
+- 입력은 `TieoutInput` 하나로 정규화합니다. 지금은 poc 가상 자료를 변환한 `src/data/mock/tieout/input.json`을 씁니다. 실제 서비스에서는 더존·홈택스·은행 엑셀 파서가 같은 형식을 만듭니다.
+- poc 결과와 같은지 대조하는 명령은 아래와 같습니다.
+
+```bash
+poc/.venv/bin/python web/scripts/convert_poc_inputs.py   # poc 엑셀 → input.json (자료가 바뀌었을 때)
+cd web && node scripts/check-tieout.ts                    # 예외·부가세 분해·거래처별 채권이 poc와 일치하는지 대조
+```
+
+- 엔진은 시연 자료에 맞춰 조정되어 있습니다. 실제 자료에서의 성능은 파일럿에서 측정합니다.
 
 ## 구조와 확장 경로
 

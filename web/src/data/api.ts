@@ -2,6 +2,7 @@
 // 실제 서비스에서는 같은 interface를 HTTP 클라이언트로 구현해 교체한다(예: httpApi).
 import { useDb, newId, nowIso } from './store'
 import { withPolicy } from './policy'
+import { addDays as addDaysIso } from '@/domain/rules'
 import type {
   AuditRequest,
   ConfirmationChannel,
@@ -11,6 +12,7 @@ import type {
   Engagement,
   RequestStatus,
   SignOff,
+  TieoutRun,
 } from '@/domain/types'
 
 export interface AuditApi {
@@ -54,6 +56,14 @@ export interface AuditApi {
   answerQuestion(id: string, questionId: string, answer: string): Promise<void>
 
   markInboxRead(id: string): Promise<void>
+
+  /** 전수대사 실행 기록 (계산은 domain/tieout/engine.ts) */
+  recordTieoutRun(run: Omit<TieoutRun, 'id' | 'ranAt' | 'ranBy'>): Promise<void>
+  /** 검토 필요 항목을 회사 확인 요청으로 보냄 */
+  requestFromException(engagementId: string, exNo: string, title: string, description: string): Promise<void>
+  concludeException(engagementId: string, exNo: string, judgment: string): Promise<void>
+  /** 전수대사 결과를 매출 조서의 근거로 연결 */
+  linkTieoutToWorkpaper(engagementId: string, fileName: string): Promise<void>
 }
 
 const set = useDb.setState
@@ -345,6 +355,49 @@ export const mockApi: AuditApi = {
       }),
     }))
     return ok()
+  },
+
+  recordTieoutRun(run) {
+    set((s) => ({ tieoutRuns: [...s.tieoutRuns, { ...run, id: newId('tr'), ranAt: nowIso(), ranBy: s.currentUserId }] }))
+    return ok()
+  },
+
+  async requestFromException(engagementId, exNo, title, description) {
+    const due = addDaysIso(get().today, 7)
+    const requestId = await mockApi.createRequest({ engagementId, title, category: '전수대사', dueDate: due, description })
+    set((s) => ({
+      requests: s.requests.map((r) => (r.id === requestId ? { ...r, tags: ['전수대사', exNo] } : r)),
+      tieoutDispositions: [
+        ...s.tieoutDispositions.filter((d) => !(d.engagementId === engagementId && d.exNo === exNo)),
+        { engagementId, exNo, status: 'requested', requestId, by: s.currentUserId, at: nowIso() },
+      ],
+    }))
+  },
+
+  concludeException(engagementId, exNo, judgment) {
+    set((s) => {
+      const prev = s.tieoutDispositions.find((d) => d.engagementId === engagementId && d.exNo === exNo)
+      return {
+        tieoutDispositions: [
+          ...s.tieoutDispositions.filter((d) => d !== prev),
+          { engagementId, exNo, status: 'concluded', requestId: prev?.requestId, judgment, by: s.currentUserId, at: nowIso() },
+        ],
+      }
+    })
+    return ok()
+  },
+
+  async linkTieoutToWorkpaper(engagementId, fileName) {
+    const docId = await mockApi.uploadDocument(engagementId, fileName, 'tieout', '분석 결과')
+    const targets: [string, string][] = [
+      ['E-61', 'KT-05 전 건 대사표 · KT-01 검토 필요 목록'],
+      ['E-22', '4000P-5 매출 Cut-off (자동 전수)'],
+      ['E-21', '4000C-2 거래처별 채권 대사 (증빙 기준 잔액)'],
+    ]
+    for (const [code, locator] of targets) {
+      const node = get().workflow.find((n) => n.engagementId === engagementId && n.code === code)
+      if (node && !node.evidence.some((e) => e.documentId === docId)) await mockApi.addEvidence(node.id, docId, locator)
+    }
   },
 
   markInboxRead(id) {

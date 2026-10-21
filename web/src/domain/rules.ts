@@ -144,6 +144,8 @@ export interface InspectionInput {
   time: TimeEntry[]
   confirmations: Confirmation[]
   independence: IndependenceConfirmation[]
+  /** 전수대사를 실행했다면 예외 처리 현황 */
+  tieout?: { exceptionCount: number; concluded: number; requested: number }
 }
 
 /**
@@ -297,7 +299,22 @@ export function inspectEngagement(input: InspectionInput): InspectionFinding[] {
     })
   }
 
-  // 7. 조서 취합 기한
+  // 7. 전수대사 예외 처리
+  if (input.tieout) {
+    const open = input.tieout.exceptionCount - input.tieout.concluded
+    out.push({
+      ruleId: 'tieout-exceptions',
+      level: open === 0 ? 'pass' : e.reportDate ? 'fail' : 'warn',
+      category: '전수대사',
+      title: '전수대사 검토 필요 항목 처리',
+      detail: open === 0 ? `${input.tieout.exceptionCount}건 모두 판단 기록` : `판단 미기록 ${open}건 (회사 확인 중 ${input.tieout.requested}건)`,
+      basis: '감사기준서 500·330 예외사항 평가·문서화 · 금감원 감리: 감사증거 문서화 지적 최다',
+      engagementId: e.id,
+      link: `${base}/tieout`,
+    })
+  }
+
+  // 8. 조서 취합 기한
   if (e.reportDate) {
     const due = addDays(e.reportDate, 60)
     const late = e.archivedDate ? e.archivedDate > due : asOf > due

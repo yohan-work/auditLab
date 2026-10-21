@@ -166,6 +166,30 @@ const rules: Rules = {
   },
 }
 
+Object.assign(rules, {
+  recordTieoutRun: {
+    engagement: (_db: Db, run: { engagementId: string }) => run.engagementId,
+    log: (_db: Db, run: { engagementId: string; dataset: string; exceptionCount: number; ms: number }) => ({
+      action: '전수대사 실행',
+      target: `${run.dataset} · 검토 필요 ${run.exceptionCount}건 · ${run.ms}ms`,
+      engagementId: run.engagementId,
+    }),
+  },
+  requestFromException: {
+    engagement: (_db: Db, engagementId: string) => engagementId,
+    log: (_db: Db, engagementId: string, exNo: string) => ({ action: '전수대사 예외 → 회사 확인 요청', target: exNo, engagementId }),
+  },
+  concludeException: {
+    engagement: (_db: Db, engagementId: string) => engagementId,
+    log: (_db: Db, engagementId: string, exNo: string) => ({ action: '전수대사 예외 판단 기록', target: exNo, engagementId }),
+  },
+  linkTieoutToWorkpaper: {
+    engagement: (_db: Db, engagementId: string) => engagementId,
+    log: (_db: Db, engagementId: string, file: string) => ({ action: '전수대사 결과 조서 연결', target: `${file} → E-61·E-22·E-21`, engagementId }),
+    success: '전수대사 결과를 매출(E-61)·Cut-off(E-22)·채권 조회(E-21) 조서의 근거로 연결했습니다.',
+  },
+} satisfies Rules)
+
 export function withPolicy(inner: AuditApi): AuditApi {
   const out = { ...inner } as Record<string, unknown>
   for (const name of Object.keys(rules) as (keyof AuditApi)[]) {

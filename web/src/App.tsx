@@ -21,6 +21,7 @@ import { TimePage } from '@/pages/engagement/TimePage'
 import { InspectionPage } from '@/pages/engagement/InspectionPage'
 import { PortalPage } from '@/pages/portal/PortalPage'
 import { AddinPage } from '@/pages/engagement/AddinPage'
+import { TieoutPage } from '@/pages/engagement/TieoutPage'
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,7 @@ const router = createBrowserRouter([
           { path: 'time', element: <TimePage /> },
           { path: 'inspection', element: <InspectionPage /> },
           { path: 'addin', element: <AddinPage /> },
+          { path: 'tieout', element: <TieoutPage /> },
         ],
       },
       { path: 'portal/:id', element: <PortalPage /> },

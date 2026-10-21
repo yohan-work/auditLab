@@ -4,6 +4,25 @@ import { useShallow } from 'zustand/react/shallow'
 import { useDb } from './store'
 import { inspectEngagement } from '@/domain/rules'
 import type { InspectionFinding } from '@/domain/types'
+import type { DbState } from './store'
+
+function tieoutState(s: DbState, engagementId: string) {
+  const run = [...s.tieoutRuns].reverse().find((r) => r.engagementId === engagementId)
+  if (!run) return undefined
+  const ds = s.tieoutDispositions.filter((d) => d.engagementId === engagementId)
+  return {
+    exceptionCount: run.exceptionCount,
+    concluded: ds.filter((d) => d.status === 'concluded').length,
+    requested: ds.filter((d) => d.status === 'requested').length,
+  }
+}
+
+export function useTieoutRun(engagementId?: string) {
+  return useDb((s) => [...s.tieoutRuns].reverse().find((r) => r.engagementId === engagementId))
+}
+export function useTieoutDispositions(engagementId?: string) {
+  return useDb(useShallow((s) => s.tieoutDispositions.filter((d) => d.engagementId === engagementId)))
+}
 
 export const useToday = () => useDb((s) => s.today)
 export const useFirm = () => useDb((s) => s.firm)
@@ -73,6 +92,7 @@ export function useInspection(engagementId?: string): InspectionFinding[] {
       time: s.timeEntries.filter((t) => t.engagementId === e.id),
       confirmations: s.confirmations.filter((c) => c.engagementId === e.id),
       independence: s.independence,
+      tieout: tieoutState(s, e.id),
     })
   }, [s, engagementId])
 }
@@ -95,6 +115,7 @@ export function useFirmInspection(): InspectionFinding[] {
             time: s.timeEntries.filter((t) => t.engagementId === e.id),
             confirmations: s.confirmations.filter((c) => c.engagementId === e.id),
             independence: s.independence,
+            tieout: tieoutState(s, e.id),
           }),
         )
         .filter((f, i, all) => f.ruleId !== 'independence' || all.findIndex((x) => x.ruleId === 'independence' && x.detail === f.detail) === i)
