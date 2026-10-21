@@ -498,6 +498,7 @@ def write(res):
     header_row(ws, k + 1, ["항목", "1/4분기", "2/4분기", "3/4분기", "4/4분기", "계", "관련 No"])
     q = lambda d: (d.month - 1) // 3
     explained = [0, 0, 0, 0]
+    vat_items = []
     rr = k + 2
     sales_by_id = {s["id"]: s for s in res["sales"]}
     inv_by = {i["appr"]: i for i in res["inv"]}
@@ -519,6 +520,7 @@ def write(res):
         elif x["kind"].startswith("세금계산서O") or x["kind"] == "수정세금계산서 원장 미반영":
             vals[q(i["wdate"])] = -i["supply"]
         explained = [a + b for a, b in zip(explained, vals)]
+        vat_items.append({"no": x["no"], "label": f"{x['kind']} · {x['cust_name']}", "v": sum(vals)})
         body_row(ws, rr, [x["kind"] + " · " + x["cust_name"]] + vals + [sum(vals), x["no"]])
         rr += 1
     diff = [g - v for g, v in zip(res["gl_q"], ret)]
@@ -575,7 +577,7 @@ def write(res):
                     "matched_amount": sum(s["total"] for s in matched), "matched_paid": len(matched_paid),
                     "matched_paid_amount": sum(s["total"] for s in matched_paid), "rules": dict(res["log"]),
                     "cutoff_rows": len(res["cutoff"])},
-        "vat": {"return": res["vat_ret"], "hometax": res["ht_q"], "ledger": res["gl_q"]},
+        "vat": {"return": res["vat_ret"], "hometax": res["ht_q"], "ledger": res["gl_q"], "items": vat_items},
         "per_customer": res["per"],
     }, open(out / "ktieout_result.json", "w"), ensure_ascii=False, indent=1, default=str)
     return path

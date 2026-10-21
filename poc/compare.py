@@ -68,7 +68,7 @@ def tobe_result(a):
     return hits
 
 
-interval = asis["coverage"]["pop_amt"] / len(asis["sample"])
+interval = asis["coverage"]["pop_amt"] / 25  # MUS 설계 표본수
 VOUCH_AMT = {"A1": None, "A2": None, "A4": 27_830_000, "A9": None}  # 표본 대조로 드러날 수 있는 건 (None=정답지 금액)
 
 
@@ -109,8 +109,11 @@ metrics = {
         "invoices": s["invoices"], "deposits": s["deposits"],
     },
     "asis_effort": asis["effort"],
+    "asis_findings": asis["findings"],
+    "asis_coverage": asis["coverage"],
     "tobe_effort": {
         "자료 3종 업로드·실행": 1,
+        "조회서 발송·회신 관리 (외부조회는 그대로 필요)": asis["coverage"]["conf_n"],
         "검토 필요 항목 확인 (건별 판단·회사 확인)": len(tobe["exceptions"]),
         "추정 배분·미배정 입금 확인": tobe["summary"]["rules"].get("입금-채권: 추정 배분(오래된 채권부터)", 0)
                                    + tobe["summary"]["rules"].get("입금-채권: 미배정", 0),
