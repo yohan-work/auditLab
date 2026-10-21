@@ -336,6 +336,10 @@ export const requests: AuditRequest[] = requestSeeds.map(([code, title, category
   clientAssigneeId: i % 3 === 0 ? 'c-oh' : 'c-han',
   dueDate,
   documentIds: docs ?? [],
+  tags: [category === '일반' ? '회계' : category, ...(i % 4 === 0 ? ['경영진'] : [])],
+  createdAt: '2026-09-2' + (i % 8),
+  submittedAt: status === 'open' ? undefined : status === 'returned' ? '2026-10-11' : status === 'accepted' ? `2026-10-${String(3 + (i % 3)).padStart(2, '0')}` : '2026-10-19',
+  returnCount: status === 'returned' ? (i % 2 ? 2 : 1) : status === 'accepted' && i % 5 === 0 ? 1 : 0,
   comments:
     status === 'returned'
       ? [
@@ -368,6 +372,10 @@ engagements.slice(1).forEach((e, ei) => {
       dueDate: `2026-1${ei % 2}-${String(5 + k).padStart(2, '0')}`,
       documentIds: [],
       comments: [],
+      tags: [],
+      createdAt: '2026-09-15',
+      submittedAt: status === 'open' ? undefined : `2026-10-${String(1 + (k % 20)).padStart(2, '0')}`,
+      returnCount: status === 'returned' ? 1 : 0,
     })
   }
 })

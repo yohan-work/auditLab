@@ -19,6 +19,8 @@ import {
 } from '@/components/ui'
 import { api } from '@/data/api'
 import { useDocuments, useEngagement, useRequests, useToday, useUsers } from '@/data/hooks'
+import { RequestAnalytics } from '@/components/RequestAnalytics'
+import { RequestHistory, TagChips, TagEditor } from '@/components/RequestExtras'
 import { addDays } from '@/domain/rules'
 import type { AuditRequest, RequestStatus } from '@/domain/types'
 import { cx, date, dateTime } from '@/lib/format'
@@ -51,6 +53,7 @@ export function RequestsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [templateOpen, setTemplateOpen] = useState(false)
+  const [analytics, setAnalytics] = useState(false)
 
   const categories = useMemo(() => Array.from(new Set(requests.map((r) => r.category))).sort(), [requests])
   const counts = useMemo(() => {
@@ -76,6 +79,9 @@ export function RequestsPage() {
         <div className="flex items-center justify-between px-6 py-5">
           <h1 className="text-[26px] font-normal text-ink">자료 요청 ({requests.length})</h1>
           <div className="flex items-center gap-2">
+            <Button variant={analytics ? 'primary' : 'secondary'} onClick={() => setAnalytics((v) => !v)}>
+              현황 분석
+            </Button>
             <Button variant="secondary" onClick={() => setTemplateOpen(true)}>
               한공회 서식으로 일괄 생성 <KrTag />
             </Button>
@@ -101,6 +107,12 @@ export function RequestsPage() {
             </button>
           ))}
         </div>
+
+        {analytics && (
+          <div className="mx-6 mt-4 rounded-lg bg-canvas p-4">
+            <RequestAnalytics requests={requests} today={today} />
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3 px-6 pt-5 pb-2">
           <Select label="상태" value={status} onChange={(e) => setStatus(e.target.value as RequestStatus | '')} className="w-40">
@@ -162,7 +174,13 @@ export function RequestsPage() {
                       className={cx('cursor-pointer hover:bg-canvas', selectedId === r.id && 'bg-brand-soft/60')}
                     >
                       <Td className="font-mono text-xs text-muted">{r.code}</Td>
-                      <Td className="font-medium text-ink">{r.title}</Td>
+                      <Td className="font-medium text-ink">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          {r.status === 'returned' && <span className="font-semibold text-danger">반려 |</span>}
+                          {r.title}
+                          <TagChips tags={r.tags} size="xs" />
+                        </span>
+                      </Td>
                       <Td>{r.category}</Td>
                       <Td>
                         <RequestStatusBadge status={r.status} />
@@ -263,6 +281,8 @@ function RequestDrawer({ request: r, onClose }: { request: AuditRequest; onClose
           </dd>
         </dl>
 
+        <TagEditor request={r} />
+
         <section>
           <h3 className="mb-1.5 text-[11px] font-semibold tracking-wider text-muted uppercase">설명</h3>
           <p className="text-[13px] leading-relaxed whitespace-pre-wrap text-ink-2">{r.description || '—'}</p>
@@ -306,6 +326,11 @@ function RequestDrawer({ request: r, onClose }: { request: AuditRequest; onClose
             })}
             {r.comments.length === 0 && <li className="text-[13px] text-faint">댓글이 없습니다.</li>}
           </ul>
+        </section>
+
+        <section>
+          <h3 className="mb-2 text-[11px] font-semibold tracking-wider text-muted uppercase">이력</h3>
+          <RequestHistory request={r} />
         </section>
       </div>
 

@@ -6,7 +6,7 @@ import { toast } from './ui'
 import { can, type Action } from '@/domain/permissions'
 
 type Db = ReturnType<typeof useDb.getState>
-type Log = { action: string; target: string; engagementId?: string }
+type Log = { action: string; target: string; engagementId?: string; userId?: string }
 
 interface Rule<A extends unknown[]> {
   /** 이 작업이 속한 감사 업무(잠금 검사용) */
@@ -56,9 +56,22 @@ const rules: Rules = {
     permission: (_db, _id, status) => (status === 'accepted' || status === 'returned' ? 'request.decide' : undefined),
     log: (db, id, status) => ({ action: `자료 요청 ${statusName[status]}`, target: `${reqOf(db, id)?.code} ${reqOf(db, id)?.title}`, engagementId: reqOf(db, id)?.engagementId }),
   },
+  setRequestTags: {
+    engagement: (db, id) => reqOf(db, id)?.engagementId,
+    log: (db, id, tags) => ({ action: '태그 변경', target: `${reqOf(db, id)?.code} → ${tags.join(', ') || '없음'}`, engagementId: reqOf(db, id)?.engagementId }),
+  },
+  commentRequest: {
+    engagement: (db, id) => reqOf(db, id)?.engagementId,
+    log: (db, id, _text, authorId) => ({
+      action: '댓글',
+      target: `${reqOf(db, id)?.code} ${reqOf(db, id)?.title}`,
+      engagementId: reqOf(db, id)?.engagementId,
+      ...(authorId ? { userId: authorId } : {}),
+    }),
+  },
   uploadToRequest: {
     engagement: (db, id) => reqOf(db, id)?.engagementId,
-    log: (db, id, file) => ({ action: '자료 제출', target: `${reqOf(db, id)?.code} · ${file}`, engagementId: reqOf(db, id)?.engagementId }),
+    log: (db, id, file, uploaderId) => ({ action: '자료 제출', target: `${reqOf(db, id)?.code} · ${file}`, engagementId: reqOf(db, id)?.engagementId, userId: uploaderId }),
   },
   signOff: {
     engagement: (db, nodeId) => nodeOf(db, nodeId)?.engagementId,

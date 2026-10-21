@@ -24,10 +24,11 @@ export interface AuditApi {
   updateEngagement(id: string, patch: Partial<Engagement>): Promise<void>
   /** 조서 최종 취합: 이후 해당 업무의 조서·요청·시간 기록은 수정할 수 없다. */
   archiveEngagement(id: string): Promise<void>
-  logActivity(entry: { action: string; target: string; engagementId?: string }): Promise<void>
+  logActivity(entry: { action: string; target: string; engagementId?: string; userId?: string }): Promise<void>
 
   createRequest(input: Pick<AuditRequest, 'engagementId' | 'title' | 'category' | 'dueDate' | 'description'>): Promise<string>
   setRequestStatus(id: string, status: RequestStatus): Promise<void>
+  setRequestTags(id: string, tags: string[]): Promise<void>
   commentRequest(id: string, text: string, authorId?: string): Promise<void>
   uploadToRequest(id: string, fileName: string, uploaderId: string): Promise<void>
 
@@ -146,6 +147,9 @@ export const mockApi: AuditApi = {
             clientAssigneeId,
             documentIds: [],
             comments: [],
+            tags: [input.category],
+            createdAt: s.today,
+            returnCount: 0,
           },
         ],
       }
@@ -154,7 +158,23 @@ export const mockApi: AuditApi = {
   },
 
   setRequestStatus(id, status) {
-    set((s) => ({ requests: s.requests.map((r) => (r.id === id ? { ...r, status } : r)) }))
+    set((s) => ({
+      requests: s.requests.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              status,
+              submittedAt: status === 'submitted' ? (r.submittedAt ?? s.today) : r.submittedAt,
+              returnCount: status === 'returned' ? r.returnCount + 1 : r.returnCount,
+            }
+          : r,
+      ),
+    }))
+    return ok()
+  },
+
+  setRequestTags(id, tags) {
+    set((s) => ({ requests: s.requests.map((r) => (r.id === id ? { ...r, tags } : r)) }))
     return ok()
   },
 
@@ -176,7 +196,7 @@ export const mockApi: AuditApi = {
     set((s) => ({
       documents: s.documents.map((d) => (d.id === docId ? { ...d, uploadedBy: uploaderId, requestId: id } : d)),
       requests: s.requests.map((r) =>
-        r.id === id ? { ...r, status: 'submitted', documentIds: [...r.documentIds, docId] } : r,
+        r.id === id ? { ...r, status: 'submitted', submittedAt: r.submittedAt ?? s.today, documentIds: [...r.documentIds, docId] } : r,
       ),
     }))
   },

@@ -82,7 +82,7 @@ function initialState(): DbState {
 export const useDb = create<DbState>()(
   persist(() => initialState(), {
     name: 'auditlab-demo',
-    version: 2,
+    version: 4,
     storage: createJSONStorage(() => localStorage),
     migrate: () => initialState(),
   }),

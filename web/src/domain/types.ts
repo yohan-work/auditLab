@@ -116,6 +116,10 @@ export interface AuditRequest {
   dueDate: string
   documentIds: ID[]
   comments: Comment[]
+  tags: string[]
+  createdAt: string // 요청일(고객 입장에서 받은 날)
+  submittedAt?: string // 최초 제출일
+  returnCount: number // 반려 횟수
 }
 
 export type Phase = 'planning' | 'execution' | 'concluding'

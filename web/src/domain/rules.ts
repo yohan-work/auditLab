@@ -328,3 +328,61 @@ export function scoreFindings(f: InspectionFinding[]) {
     pass: f.filter((x) => x.level === 'pass').length,
   }
 }
+
+// ---------------------------------------------------------------- 자료 요청 분석 (고객 포털·감사인 공통)
+
+export interface RequestMetrics {
+  total: number
+  accepted: number
+  submitted: number
+  outstanding: number
+  pctComplete: number
+  /** 앞으로 30일 동안 날짜별 마감 건수(미승인 기준) */
+  comingDue: { date: string; count: number }[]
+  /** 기한이 지난 미제출 건의 지연 일수 분포 */
+  overdue: { label: string; count: number }[]
+  overdueCount: number
+  avgDaysOverdue: number
+  /** 제출된 적 있는 건 중 기한 내 제출 비율 */
+  onTimePct: number
+  submittedEver: number
+  returnedPct: number
+  returnedMultiplePct: number
+}
+
+export function requestMetrics(requests: AuditRequest[], today: string): RequestMetrics {
+  const total = requests.length
+  const accepted = requests.filter((r) => r.status === 'accepted').length
+  const submitted = requests.filter((r) => r.status === 'submitted' || r.status === 'in_review').length
+  const outstandingList = requests.filter((r) => r.status === 'open' || r.status === 'returned')
+  const comingDue = Array.from({ length: 30 }, (_, i) => {
+    const date = addDays(today, i)
+    return { date, count: requests.filter((r) => r.status !== 'accepted' && r.dueDate === date).length }
+  })
+  const lateDays = outstandingList.filter((r) => r.dueDate < today).map((r) => daysBetween(r.dueDate, today))
+  const buckets: [string, (d: number) => boolean][] = [
+    ['1일', (d) => d === 1],
+    ['2일', (d) => d === 2],
+    ['3일', (d) => d === 3],
+    ['4일', (d) => d === 4],
+    ['5~10일', (d) => d >= 5 && d <= 10],
+    ['10일 초과', (d) => d > 10],
+  ]
+  const ever = requests.filter((r) => r.submittedAt)
+  const onTime = ever.filter((r) => r.submittedAt! <= r.dueDate)
+  return {
+    total,
+    accepted,
+    submitted,
+    outstanding: outstandingList.length,
+    pctComplete: total ? Math.round((accepted / total) * 100) : 0,
+    comingDue,
+    overdue: buckets.map(([label, f]) => ({ label, count: lateDays.filter(f).length })),
+    overdueCount: lateDays.length,
+    avgDaysOverdue: lateDays.length ? Math.round((lateDays.reduce((a, b) => a + b, 0) / lateDays.length) * 10) / 10 : 0,
+    onTimePct: ever.length ? Math.round((onTime.length / ever.length) * 1000) / 10 : 0,
+    submittedEver: ever.length,
+    returnedPct: ever.length ? Math.round((ever.filter((r) => r.returnCount > 0).length / ever.length) * 1000) / 10 : 0,
+    returnedMultiplePct: ever.length ? Math.round((ever.filter((r) => r.returnCount > 1).length / ever.length) * 1000) / 10 : 0,
+  }
+}
